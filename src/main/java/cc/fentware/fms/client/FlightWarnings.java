@@ -37,10 +37,23 @@ public final class FlightWarnings {
             case ALTITUDE -> { return new Alert("ALTITUDE", Severity.CAUTION); }
             case NONE -> { }
         }
-        // Flight-state warnings remain available whenever no terrain threat is higher priority.
-        if (durability <= 5) return new Alert("CHECK WINGS - CRITICAL", Severity.CRITICAL);
+        // Elytra durability in Minecraft is usually 432 points; percentage
+        // thresholds provide meaningful landing warnings before the last few HP.
+        int max = chest.is(Items.ELYTRA) ? chest.getMaxDamage() : 0;
+        int percent = max > 0 ? (int) Math.ceil(durability * 100.0 / max) : 100;
+        boolean lowFuel = rockets <= 3;
+        if (percent <= 4 || durability <= 5)
+            return new Alert("LAND NOW", Severity.CRITICAL);
+        if (percent <= 8 && lowFuel)
+            return new Alert("LAND NOW", Severity.CRITICAL);
+        if (percent <= 8)
+            return new Alert("LAND SOON", Severity.CRITICAL);
+        if (percent <= 15)
+            return new Alert("LOW ELYTRA", Severity.CAUTION);
+        if (percent <= 35)
+            return new Alert("ELYTRA HEALTH", Severity.CAUTION);
         if (descent > 32 && horizontalSpeed > 15) return new Alert("HIGH SPEED DESCENT", Severity.CRITICAL);
-        if (durability <= 20) return new Alert("CHECK WINGS", Severity.CAUTION);
+
         if (descent > 16) return new Alert("SINK RATE", Severity.CAUTION);
         if (rockets <= 3) return new Alert("BINGO FUEL", Severity.CAUTION);
         return Alert.none();
