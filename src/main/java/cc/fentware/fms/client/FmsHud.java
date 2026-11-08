@@ -27,6 +27,7 @@ public final class FmsHud {
         if (!HudSettings.enabled || mc.player == null || mc.gui.hud.isHidden()) return;
         drawInstruments(g, px(HudSettings.instrumentsX, g.guiWidth()), py(HudSettings.instrumentsY, g.guiHeight()));
         drawNavigation(g, px(HudSettings.navigationX, g.guiWidth()), py(HudSettings.navigationY, g.guiHeight()));
+        drawWarning(g);
     }
 
     static int px(double norm, int screenWidth) {
@@ -76,6 +77,20 @@ public final class FmsHud {
             line(g, x, y, 48, "ETA   --:--", MUTED);
         }
         line(g, x, y, 62, "UNKNOWN TERRAIN: Y " + HudSettings.unknownCruiseY, AMBER);
+    }
+
+    private static void drawWarning(GuiGraphicsExtractor g) {
+        FlightWarnings.Alert alert = FlightWarnings.current();
+        if (alert.severity() == FlightWarnings.Severity.NONE) return;
+
+        Minecraft mc = Minecraft.getInstance();
+        int x = Math.max(0, (g.guiWidth() - WIDTH) / 2);
+        int y = Math.max(8, g.guiHeight() / 4);
+        int color = alert.severity() == FlightWarnings.Severity.CRITICAL ? 0xFFFF6666 : AMBER;
+        g.fill(x, y, x + WIDTH, y + 24, 0xD0201414);
+        g.fill(x, y, x + WIDTH, y + 2, color);
+        g.text(mc.font, "FMS WARNING", x + 7, y + 4, color, true);
+        g.text(mc.font, alert.message(), x + 7, y + 14, color, true);
     }
 
     private static String eta(double seconds) {
