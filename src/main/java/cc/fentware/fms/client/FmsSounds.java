@@ -2,6 +2,7 @@ package cc.fentware.fms.client;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
+import net.minecraft.client.resources.sounds.SoundInstance;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.Registry;
 import net.minecraft.resources.Identifier;
@@ -80,13 +81,27 @@ public final class FmsSounds {
         CustomSounds.refresh();
     }
 
-    public static void preview(SoundEvent sound) {
-        play(sound);
+    /** Single FMS audio channel. Interrupts previous clips without touching other mods. */
+    private static SoundInstance activeWarning;
+
+    public static void preview(SoundEvent sound) { play(sound); }
+
+    public static void stopWarningAudio() {
+        if (activeWarning != null) {
+            Minecraft.getInstance().getSoundManager().stop(activeWarning);
+            activeWarning = null;
+        }
+    }
+
+    public static boolean isWarningPlaying() {
+        return activeWarning != null && Minecraft.getInstance().getSoundManager().isActive(activeWarning);
     }
 
     public static void play(SoundEvent sound) {
+        // A new alert or a preview replaces the previous FMS sound in full.
+        stopWarningAudio();
         if (sound == null || !HudSettings.audioEnabled || HudSettings.audioVolume <= 0) return;
-        Minecraft.getInstance().getSoundManager().play(
-                SimpleSoundInstance.forUI(sound, 1.0F, HudSettings.audioVolume / 100.0F));
+        activeWarning = SimpleSoundInstance.forUI(sound, 1.0F, HudSettings.audioVolume / 100.0F);
+        Minecraft.getInstance().getSoundManager().play(activeWarning);
     }
 }
