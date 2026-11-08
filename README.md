@@ -1,259 +1,341 @@
 # FMS — Elytra Flight Management System
 
-**Status: initial architecture / unintegrated Java core.** This is the first rough draft, not yet an installable Minecraft mod.
+**FMS** is a client-side Minecraft Fabric mod that turns Elytra travel into an aviation-style experience. It adds configurable flight instruments, terrain and maneuver warnings, warning audio, destination navigation, and an **advisory** cruise/rocket planner. Optional compatibility with **Xaero's Minimap** and **Xaero's World Map** lets you reuse saved waypoints and view a flight-plan summary in the map.
+
+> **Development status:** \`0.1.0-alpha\` for **Minecraft Java Edition 26.3**. This is a prototype. Features described below exist in the source, but not every latest change has been verified with a successful local build or in-game test. Terrain warnings and flight estimates are **not guaranteed safe**. **FMS is not an autopilot.**
+
+## Contents
+
+- [Quick start](#quick-start)
+- [Requirements and installation](#requirements-and-installation)
+- [Controls](#controls)
+- [HUD layouts and settings](#hud-layouts-and-settings)
+- [Navigation and Xaero integration](#navigation-and-xaero-integration)
+- [Cruise altitude and rocket estimates](#cruise-altitude-and-rocket-estimates)
+- [Warning system](#warning-system)
+- [Custom warning sounds](#custom-warning-sounds)
+- [Configuration files](#configuration-files)
+- [Development and building](#development-and-building)
+- [Known limitations and troubleshooting](#known-limitations-and-troubleshooting)
+- [Roadmap](#roadmap)
+
+## Quick start
+
+1. Install Fabric for **Minecraft 26.3**, Fabric API, and the FMS mod JAR in your Minecraft profile's \`mods/\` folder. [Mod Menu](https://modrinth.com/mod/modmenu) is optional.
+2. Join a world, equip an Elytra, and press **O** to open FMS settings. The default HUD mode shows FMS when an Elytra is equipped.
+3. Press **K** to switch HUD layouts: **Boxed → Aviation → Hybrid**. Use **H** to toggle the HUD.
+4. Set a destination, for example:
+   \`\`\`text
+   /fms go 4300 800
+   /fms cruise status
+   \`\`\`
+5. While flying, follow the displayed heading/altitude **suggestions**. FMS will not steer, change pitch, or use rockets for you.
+6. To use Xaero waypoints, install compatible Xaero's Minimap and World Map versions, create/save a waypoint, then enter:
+   \`\`\`text
+   /fms xaero list
+   /fms xaero select 1
+   \`\`\`
 
-FMS is a planned client-side flight director for Minecraft Elytra travel, with Xaero's World Map terrain survey, destination coordinates, terrain-aware cruise targets, ETA, rocket reserves, wing condition, aviation-style voice warnings, and modular draggable HUD widgets.
+All FMS commands are **client-side**; no server plugin or operator permission is required. Manual navigation and Xaero waypoint navigation share the same FMS destination display.
 
-## Initial behavior
+## Requirements and installation
 
-- Input destination X/Z; plan a horizontal route and a conservative cruise target.
-- Fully mapped terrain: highest sampled ground elevation plus configurable clearance (default **40 blocks**).
-- Unmapped / partially mapped terrain: never assume it is clear; recommend **at least Y=250**, configurable.
-- If mapped terrain calls for more than Y=250, use the higher recommendation, subject to a configured ceiling. A capped target carries a **ceiling-constrained** flag and is **not guaranteed safe**.
-- ETA is undefined at zero horizontal speed; ultimately uses smoothed observed speed and climb/descent estimates.
-- Give terrain and impact alerts priority over noncritical warnings.
+| Item | Version / requirement |
+| --- | --- |
+| Minecraft | **Java Edition 26.3** |
+| Mod loader | **Fabric Loader 0.19.5 or newer compatible version** |
+| Required mod | **Fabric API** (project development version: \`0.161.0+26.3\`) |
+| Java runtime for development | **Java 25** |
+| Mod Menu | Optional; provides **Mods → FMS → Configure** |
+| Xaero's Minimap | Optional; minimap HUD avoidance and waypoint files |
+| Xaero's World Map | Optional; shared waypoints and an FMS flight-plan overlay |
 
-> Y=250 is a fallback recommendation, not a promise of safety. Tall mountains, structures, unloaded chunks, insufficient rockets and the player's current trajectory can make it unsafe.
+**Player installation:** Put the built FMS JAR and matching Fabric API JAR in your active Minecraft profile's \`mods/\` directory. Add Mod Menu and/or Xaero mods if desired. Use versions that actually support Minecraft 26.3.
 
-## Repository layout
+**Developers:** The project's Gradle configuration targets Fabric Loom \`1.18.2\`, Gradle \`9.7.1\`, and Java \`25\`. The repository may not include a complete Gradle wrapper JAR, so a system/local Gradle installation may be needed.
 
-- `src/main/java/cc/fentware/fms/core`: Minecraft-independent planning, telemetry, warning policy.
-- `src/test`: small dependency-free smoke tests.
-- `docs/ARCHITECTURE.md`: integrations, risk boundaries, staged roadmap.
+FMS is a client-only mod: the world or server does not need to install FMS to use its HUD or local commands.
 
-Run the core smoke tests with a JDK 17+ installed:
+## Controls
 
-```bash
-bash scripts/test-core.sh
-```
+Default keybinds (rebind them in Minecraft's Controls menu if needed):
 
-## Planned implementation order
+| Key | Action |
+| --- | --- |
+| **H** | Show/hide FMS HUD |
+| **J** | Open the **Boxed HUD** drag-and-drop editor; Escape saves |
+| **K** | Cycle **Boxed / Aviation / Hybrid** layouts |
+| **M** | Mute/unmute FMS warning audio |
+| **N** | Preview the stock master-caution beep |
+| **O** | Open FMS settings while in a world |
 
-1. Confirm exact Minecraft/Fabric loader/API versions and initialize a real Fabric client mod.
-2. Connect client tick telemetry; implement destination command and persistent config.
-3. Render movable HUD instruments (altitude, speed, heading, ETA, rockets, Elytra health).
-4. Add Xaero terrain adapter with explicit unknown coverage and safe on-thread snapshots.
-5. Route sampling, flight profile, forward-impact prediction, warnings, original audio assets.
+### Commands
 
-**Not an autopilot:** FMS gives flight guidance; it does not steer or automate flight.
+| Command | What it does |
+| --- | --- |
+| \`/fms go <x> <z>\` | Set a destination using manual X/Z coordinates |
+| \`/fms clear\` | Clear the current destination |
+| \`/fms xaero list\` | List saved Xaero waypoints (up to 20 displayed) |
+| \`/fms xaero select <number>\` | Select a listed Xaero waypoint as your destination |
+| \`/fms map on\` / \`/fms map off\` | Show/hide the flight-plan panel inside Xaero's World Map |
+| \`/fms cruise on\` / \`/fms cruise off\` | Show/hide cruise guidance |
+| \`/fms cruise status\` | Print current altitude, heading, and rocket estimates |
+| \`/fms cruise auto\` | Return to calculated cruise-altitude guidance |
+| \`/fms cruise y <64–300>\` | Manually choose a target cruise Y-level |
+| \`/fms cruise reach <100–2000>\` | Set assumed horizontal **blocks per rocket** |
+| \`/fms cruise reserve <0–16>\` | Set the number of extra reserve rockets |
 
+**Example flight:**
+\`\`\`text
+/fms go 4300 800
+/fms cruise on
+/fms cruise reach 400
+/fms cruise reserve 2
+/fms cruise status
+\`\`\`
 
-## HUD alpha (Fabric 26.3)
+The destination remains active until you clear it, leave the current world, or switch to another destination. Destinations are **session-only**, not saved permanently in FMS.
 
-The first on-screen HUD implementation lives in `cc.fentware.fms.client`.
+## HUD layouts and settings
 
-- **H** toggles the complete flight HUD.
-- **J** opens the HUD layout editor; drag the flight and navigation panels, then press Escape to save.
-- **/fms go <x> <z>** sets a temporary waypoint (client-side only).
-- **/fms clear** removes that waypoint.
-- Layout is persisted to `config/fms-hud.properties`; waypoints are session-only.
-- HUD shows live airspeed (blocks/s), Y altitude, vertical speed, heading, Elytra remaining durability, inventory firework rockets, X/Z position, distance and simple speed-based ETA.
-- The displayed unknown-terrain Y=250 is a **configuration recommendation**, not a scanned terrain clearance. Xaero integration and predicted collision detection are not active yet.
+FMS offers three display styles:
 
-Build requirements: **JDK 25**, **Gradle 9.7.1**, Minecraft **26.3**, Fabric Loader **0.19.5**, Fabric API **0.161.0+26.3**. From the repository root use `gradle build` (a Gradle wrapper JAR is not yet checked in). Build locally; this repository intentionally has no GitHub Actions workflow.
+- **Aviation (default):** A transparent flight HUD with a heading tape, pitch ladder, speed and altitude tapes, velocity-based flight-path marker, vertical speed, ground clearance (AGL when measurable), Elytra durability, rockets, navigation, and active warnings.
+- **Boxed:** Two configurable panels: **Flight Data** and **Navigation**. The J editor lets you drag these panels and save their positions.
+- **Hybrid:** Aviation-style HUD plus additional terrain-status text where space permits.
 
-**Verification:** Java core smoke tests have passed previously. The Fabric client and HUD have not yet been compiled or launched in a Minecraft client here. The Fabric HUD has not yet been compiled or launched here; resolve any API incompatibilities with a local Gradle build before installing.
+### Visibility and layout settings
 
-## Development phases
+Open settings using **O**, or **Mod Menu → FMS → Configure**. Tabs currently include **HUD, Audio, Terrain, Wings**.
 
-See [docs/ROADMAP.md](docs/ROADMAP.md). Phase 1: HUD and basic telemetry warnings. Phase 2: Xaero terrain calculations, safe-altitude planning, and real terrain lookahead. Phase 3: opt-in, player-overridable assisted flight and experimental emergency recovery. All changes currently go directly to `main`.
+The **HUD** tab includes:
 
-## Phase 1.5 — aviation HUD (prototype)
+- **HUD Visibility:** \`ALWAYS\`, \`ELYTRA_EQUIPPED\` (default), or \`ONLY_FLYING\`.
+- **Layout:** Boxed, Aviation, or Hybrid.
+- **HUD Enabled:** Global display toggle.
+- **Xaero Space:** Optional approximate minimap safe-area avoidance.
+- **Minimap Corner:** Set to **top-right, top-left, bottom-right, or bottom-left** to match your Xaero configuration.
 
-- Default mode is **AVIATION**: transparent center reticle, pitch ladder, horizon, velocity-derived flight-path marker, heading tape, speed/altitude tapes, vertical speed, wing durability, rocket reserves, destination cue and warning text.
-- **K** cycles `BOXED -> AVIATION -> HYBRID -> BOXED`, with the selection saved in `config/fms-hud.properties`.
-- **H** toggles the entire HUD. **J** still opens the original draggable **boxed-panel** layout editor; per-instrument dragging for cockpit symbology is not implemented yet.
-- **HYBRID** currently uses the same cockpit overlay plus the explicit unknown-terrain Y=250 advisory; it does not yet place configurable mini-panels.
-- No bank/roll simulation and no terrain awareness yet. Flight-path symbology is based on sampled movement, not a physics simulator. Pitch ladder and tapes are an initial stylized pass for testing.
+FMS reserves space near the bottom of the screen for Minecraft's hotbar, XP, hearts, armor, food, and other Survival indicators. It uses an approximate **78 GUI-pixel** bottom margin in Survival and **42 pixels** in Creative. On smaller scaled windows, it may hide secondary labels rather than covering vanilla UI.
 
-Build and test locally with `gradle clean build` then `gradle runClient`; no CI or GitHub Actions workflow.
+In Aviation/Hybrid, destination and cruise readouts are combined into one compact top-corner block, opposite the configured Xaero Minimap corner when avoidance is enabled. **FMS does not detect Xaero's exact live minimap dimensions or arbitrary custom positions.** If something overlaps, verify **Xaero Space: ON** and set **Minimap Corner** correctly.
 
-## Phase 1 warning audio
+Only Boxed panels are draggable via J; individual aviation instruments are not independently movable yet.
 
-Six stock `.ogg` files are registered through `assets/fms/sounds.json`: `bingo`, `warning`, `caution`, `pullup`, `altitude`, `mastercaution`.
+## Navigation and Xaero integration
 
-Current warning-to-clip mapping:
-- `BINGO FUEL` → `bingo.ogg`
-- `SINK RATE` → `caution.ogg`
-- `HIGH SPEED DESCENT` → `warning.ogg`
-- `CHECK WINGS` and `CHECK WINGS - CRITICAL` → `mastercaution.ogg`
-- `pullup.ogg` and `altitude.ogg` are installed but **not automatically triggered** yet; they need phase-two terrain/altitude validation.
+### Manual coordinates
 
-The warning system plays one selected alert at a time, on changes (minimum 1.2 seconds separation), then repeats the same alert at most every 12 seconds. It clears warning state when Elytra flight ends.
+Use:
+\`\`\`text
+/fms go 4300 800
+\`\`\`
 
-- **M** toggles FMS warning sounds (persisted).
-- **N** previews the master caution sound.
-- Change `audioEnabled=true/false` and `audioVolume=0..100` in `config/fms-hud.properties` (edit while Minecraft is closed); these are interim settings until the full settings screen is built.
-- Playback is client-side, independent of the HUD visibility toggle. Test with your Minecraft master/UI audio levels enabled.
+FMS shows the destination as **CUSTOM**, together with distance, heading, and an ETA based on current horizontal speed. When stationary, ETA may be unavailable. This is a **straight-line** estimate, not a terrain-aware path or a promise that you can reach it without detours.
 
-Audio integration is source-committed but **not yet compiled or playtested** after this change. Run `gradle clean build` followed by `gradle runClient`. Redistribution rights for uploaded audio remain the responsibility of the project.
+### Xaero saved waypoints
 
-## FMS in-game settings (phase-one implementation)
+With compatible **Xaero's Minimap** and **Xaero's World Map** installed:
 
-Press **O** while in a world to open the new FMS settings screen:
+1. Open Xaero's World Map (commonly **M**, depending on your Xaero keybind).
+2. Create and **save** a waypoint.
+3. Run \`/fms xaero list\`.
+4. Check the waypoint's displayed **world and dimension**, then run \`/fms xaero select 1\` (or the number shown).
+5. FMS uses that waypoint's **name and X/Z coordinates**.
 
-- **HUD MODE** cycles `ALWAYS`, `ELYTRA_EQUIPPED` (default), and `ONLY_FLYING`. Equip an Elytra in the chest slot to reveal FMS when in the default mode; removing it hides the HUD. **H** remains the global HUD enable/disable toggle.
-- **STYLE** cycles boxed, aviation, and hybrid.
-- **AUDIO** enables/disables warning audio, with **VOL -** / **VOL +** stepping the FMS audio volume by 10%.
-- Each of the five active warnings has a selectable stock sound (`bingo`, `warning`, `caution`, `pullup`, `altitude`, `mastercaution`, or `off`), plus a **TEST** button.
-- Settings save to `config/fms-hud.properties`; **Done** closes the screen. Existing shortcuts remain available: H HUD, J boxed-layout editor, K HUD style, M audio toggle, N master-caution preview.
+This is a **read-only, file-based integration**. It looks for Xaero's waypoint text files in the active game directory, under \`xaero/minimap/\` or the older \`XaeroWaypoints/\` location. It does not modify Xaero waypoint data.
 
-### Replacing sounds with your own clips
+**Important:** FMS does not automatically validate the selected waypoint against the current world/dimension. Lists can include other worlds or servers. Select only a waypoint from the correct world and dimension. Xaero file formats can change, so importer compatibility needs in-game verification.
 
-The menu selects from the six bundled sound event IDs; it does **not** import arbitrary MP3/OGG files or browse your file system yet. To substitute a clip, use a Minecraft resource pack that overrides the matching resource at `assets/fms/sounds/warnings/<name>.ogg` while preserving the existing filenames and event names. Convert to OGG Vorbis before adding the replacement. Reload resources after changing the pack.
+### FMS information inside Xaero's World Map
 
-The first pass has **no Xaero terrain detection**, no actual ground-proximity or pull-up activation, and no autopilot. `pullup` and `altitude` can be previewed or assigned to an existing alert as a substitute tone, but are not separate detected events yet.
+When the World Map is open, FMS has an optional upper-right **FMS / FLIGHT PLAN** panel showing:
 
-Changes are pushed directly to `main`. They have not been compiled or in-game verified in this environment: run `gradle clean build` and `gradle runClient` locally.
+- **YOU:** current X, Y, and Z.
+- **TO / DEST:** destination label and X/Z.
+- **DIST / HDG:** straight-line distance and destination bearing.
+- **CRUISE Y:** recommended altitude plus \`CLIMB\`, \`LEVEL\`, or \`DESCEND\`.
+- **ROCKETS:** estimated requirement (including reserve) versus rockets in inventory.
+- **TERRAIN:** whether nearby sampled sections cover the proposed route.
 
+Both **\`/fms go\` manual destinations** and **\`/fms xaero select\` destinations** feed this same panel. Toggle it with \`/fms map on\` or \`/fms map off\`. The panel is also hidden when cruise guidance is turned off.
 
-## Mod Menu integration (optional)
+**Currently not implemented:** Clicking an arbitrary point on Xaero's World Map to set the FMS destination directly. First create/select a saved waypoint or use manual coordinates. The overlay uses an optional Fabric screen hook and may need adaptation to Xaero GUI changes.
 
-FMS implements the Mod Menu `modmenu` entrypoint and provides a config screen factory. With [Mod Menu](https://modrinth.com/mod/modmenu) installed on Fabric 26.3, open **Mods → FMS → Configure** to launch the same sound/HUD settings screen available via **O** in-game. Closing returns to the previous Mod Menu screen.
+## Cruise altitude and rocket estimates
 
-The Gradle development runtime includes Mod Menu `21.0.0` from Terraformers Maven for testing. End users are not required to install Mod Menu: FMS still works independently with its **O** shortcut. If you package a JAR, do not distribute Mod Menu inside it.
+After you select a destination, the flight director can display:
 
-Test: `gradle clean build` and `gradle runClient`. Check the Mods list and configure action on the title screen; verify that the in-game shortcut still works without Mod Menu. The new integration has not been locally compiled or launch-tested here.
+| Display | Meaning |
+| --- | --- |
+| \`CRZ Y 250\` | Suggested **world Y-level** to cruise at |
+| \`CLIMB\`, \`LEVEL\`, \`DESCEND\` | Whether your current Y is below, near, or above the target |
+| \`TURN L\` / \`TURN R\` | Approximate heading correction to destination |
+| \`RKT ~12 / 18\` | Estimated rockets needed / carried (example only) |
+| \`ROUTE NOT SURVEYED\` | FMS could not confirm terrain along the entire proposed route |
 
-## Settings layout fix
+### Rocket budgeting
 
-The settings screen now uses **HUD** and **AUDIO** tabs instead of one fixed-height panel. The AUDIO page contains five sound-assignment buttons with neighboring TEST buttons; click the assigned sound name to cycle through the six registered OGG clips or `off`. The smaller layout does not require scrolling at common GUI scales. Switch between pages using the tabs at the top. This code is committed to `main` but awaits a local Minecraft build/playtest.
+FMS starts with a configurable assumption of **400 horizontal blocks traveled per rocket** and **2 reserve rockets**:
 
-## Xaero's Minimap HUD coexistence
+\`\`\`text
+Travel rockets = ceil(remaining distance / assumed blocks per rocket)
+Estimated total = travel rockets + reserve rockets
+\`\`\`
 
-FMS detects Xaero's Minimap when installed and offers **Xaero Space** in **FMS Settings → HUD** (enabled by default). Set **Minimap Corner** to match the position chosen in Xaero's own `Change Position` screen (defaults to top right). The boxed FMS flight/navigation panels will temporarily shift vertically if they overlap a reserved corner region; saved drag positions are left untouched. In AVIATION/HYBRID modes the main flight instruments stay in the screen center and do not move.
+For example, 3,900 blocks at 400 blocks/rocket with 2 reserve gives \`ceil(3900/400) + 2 = 12\` estimated rockets.
 
-This is a conservative **corner safe-area**, **not** direct access to Xaero's live minimap position or shape, and it is not a universal overlap detector. Players using custom non-corner positions or unusually large minimaps may need to move widgets manually using J, or disable Xaero Space. The reserve uses approximate scaled GUI dimensions. It requires no Xaero dependency and does not affect normal FMS use when Xaero is absent.
+**This is a rough budget, not an accurate flight-physics simulation.** Actual range depends on how you glide, flight speed, firework use, pitch changes, and terrain. Tune \`/fms cruise reach\` after your own test flights.
 
-This code is committed to `main` but needs a local Minecraft compile and visual test with Xaero's Minimap installed.
+### Cruise Y recommendation
 
-## User custom warning audio (OGG, phase one)
+FMS samples **Minecraft's loaded chunk heightmaps** along up to approximately the next **768 blocks** toward your destination. It uses the highest sampled terrain plus a default **40-block clearance margin**. If portions of the route are unknown, it also applies a configurable **Y=250** fallback. The current prototype clamps automatic recommendations to Y **64–300**.
 
-FMS now creates `config/fms/sounds/` in the active Minecraft game directory. Add up to **16** mono OGG Vorbis clips here, with simple filenames such as `my_warning.ogg` (letters, numbers, underscores and hyphens only; up to 48 characters before `.ogg`, case-sensitive lowercase extension). Clips larger than 8 MiB and files without an Ogg container header are ignored; the header check does not guarantee valid Vorbis encoding.
+**A route marked "sampled" is not certified safe.** Sparse samples can miss structures, caves, overhangs, or terrain between sample points; unloaded or distant terrain is unknown. The current code does **not** read Xaero's stored world-map terrain heights, does not produce obstacle-avoiding paths, and does not control the Elytra.
 
-Go to **Mod Menu → FMS → Configure → Audio** and use **OPEN FOLDER** to access this location, then **REFRESH** to rescan it. FMS creates/updates an unpacked resource pack at `resourcepacks/FMS Custom Sounds/`. Under **Options → Resource Packs**, enable **FMS Custom Sounds** once; after a Refresh, reload resources using **F3+T**, or reopen Resource Packs to reload. This extra step is necessary for Minecraft's sound manager to see newly generated OGG resources. Assign sounds using the warning row selector (the `custom:<filename>` choices appear after Refresh), then TEST. Existing bundled sounds still work without the generated pack.
+Use \`/fms cruise y 180\` to set a manual target or \`/fms cruise auto\` to restore automatic suggestions.
 
-FMS deliberately does **not** execute or decode arbitrary files itself: it packages user-provided OGG files into the normal Minecraft resource pipeline. Settings persist in `config/fms-hud.properties`; assignments made to a missing custom file will fall back to `bingo` the next time settings are loaded. Currently, replacing or changing a custom clip needs REFRESH + Minecraft resource reload. Import picker and automatic resource-pack activation are future enhancements, not present functionality.
+## Warning system
 
-Development client folder: `FMS/run/config/fms/sounds/`. Normal launcher: `.minecraft/config/fms/sounds/`, or the game directory of the user's modpack/profile.
+Flight warnings operate while you are **actively Elytra-gliding**. The HUD and sounds use live player movement, remaining Elytra durability, rocket inventory, and locally loaded terrain.
 
-The custom-sounds implementation has been committed but not compiled or verified in-game in this environment.
+### One sound at a time
 
-## Terrain / altitude callouts (local first pass)
+To prevent overlapping "Terrain / Pull Up / Warning" playback during stressful flights:
 
-FMS now registers the three supplied recordings `lowterrain.ogg`, `terrain.ogg`, and `terrainahead.ogg` and uses existing `pullup.ogg` and `altitude.ogg`. Terrain awareness runs **only during Elytra flight**, sampling Minecraft's **already loaded** chunk heightmaps (MOTION_BLOCKING) at the current X/Z and up to ~48 blocks ahead along the player’s measured velocity. It never loads unseen chunks, and ignores unobserved samples. It predicts a short, straight-line path using current velocity; it is **not** guaranteed collision detection.
+- FMS has **one active warning-audio channel**. Starting a new warning stops the previous FMS sound instance.
+- A **higher-priority** warning can interrupt immediately.
+- An equal-priority switch must stabilize for about **0.8 seconds**; downgrading requires about **1.8 seconds**.
+- A cleared condition waits about **0.7 seconds** before stopping its sound.
+- A persistent alert repeats no sooner than **12 seconds**, and only after its previous clip has ended.
+- **Master caution does not automatically beep before every voice message.** Caution/warning clips can instead be assigned directly to particular warning types.
 
-Current initial thresholds (tune after in-game flight testing):
-- **ALTITUDE**: <25 blocks above local surface and descending faster than 3 blocks/sec.
-- **LOW TERRAIN**: <7 blocks above local surface.
-- **TERRAIN AHEAD**: projected path comes within 14 blocks of surface in the sampled horizon.
-- **TERRAIN**: projected margin <7 blocks within 1.8 seconds.
-- **PULL UP**: projected margin <3.5 blocks within 1.15 seconds (critical; immediately overrides audio transition delay).
+### Terrain and altitude
 
-There is a new **AGL** (above ground level) value in the cockpit HUD and a **TERRAIN** settings tab in Mod Menu → FMS → Configure for enabling warnings and changing/testing individual recordings.
+FMS looks at loaded Minecraft surface-height data at the player and along a short projected flight path (up to approximately 48 blocks forward). Thresholds below are initial test values:
 
-**Not yet Xaero terrain-cache integration:** Xaero's Minimap has optional FMS screen-placement compatibility, but FMS does not read Xaero's historical/remote terrain cache. Local Minecraft chunk heightmaps are available without a dependency on Xaero. No guarantees for unloaded terrain, caves, roofs, overhead or lateral obstacles, or sudden velocity changes. The critical warning is advisory and does not control the player. The implementation has not been compiled or validated in-game here; please test on a backup world and report the first Gradle compiler error if any.
+| Alert | Initial trigger | Default clip |
+| --- | --- | --- |
+| **Altitude** | Under 25 blocks above local terrain, descending more than 3 blocks/sec | \`altitude.ogg\` |
+| **Low Terrain** | Under 7 blocks above local terrain | \`lowterrain.ogg\` |
+| **Terrain Ahead** | Projected clearance under 14 blocks | \`terrainahead.ogg\` |
+| **Terrain** | Projected clearance under 7 blocks within 1.8 sec | \`terrain.ogg\` |
+| **Pull Up** | Projected clearance under 3.5 blocks within 1.15 sec | \`pullup.ogg\` |
 
-## Elytra integrity and landing voice alerts
+This is a **local, short-horizon advisory**, not collision avoidance. It does not know all blocks, caves, ceilings, lateral walls, unloaded terrain, or future turns.
 
-The uploaded clips `elytra.ogg`, `lowelytra.ogg`, `land.ogg`, and `landnow.ogg` are registered as stock sounds and mapped to the new Elytra warnings. While actively flying:
+### Elytra health, descent, fuel and maneuver alerts
 
-- **ELYTRA HEALTH** (35% durability or below): `elytra.ogg`
-- **LOW ELYTRA** (15% or below): `lowelytra.ogg`
-- **LAND SOON** (8% or below): `land.ogg`
-- **LAND NOW** (4% or below, 5 or fewer durability points, or <=8% plus <=3 rockets): `landnow.ogg`.
+| Alert | Initial trigger | Default clip |
+| --- | --- | --- |
+| **Elytra Health** | 35% durability remaining or less | \`elytra.ogg\` |
+| **Low Elytra** | 15% or less | \`lowelytra.ogg\` |
+| **Land Soon** | 8% or less | \`land.ogg\` |
+| **Land Now** | 4% or less, 5 or fewer durability points, **or** 8% or less with 3 or fewer rockets | \`landnow.ogg\` |
+| **High-Speed Descent** | More than 32 blocks/sec downward and more than 15 blocks/sec horizontally | \`warning.ogg\` |
+| **Sink Rate** | More than 16 blocks/sec downward when no higher-priority condition applies | \`caution.ogg\` |
+| **Bingo Fuel** | 3 or fewer fireworks in inventory | \`bingo.ogg\` |
+| **Hard Turn** | Fast actual movement-direction change at 14+ blocks/sec, after a brief filtered threshold | \`mastercaution.ogg\` |
+| **Steep Dive** | Nose down over 38°, horizontal speed at least 16 blocks/sec, and descent over 11 blocks/sec | \`mastercaution.ogg\` |
 
-Priority: urgent PULL UP / TERRAIN collisions first, then LAND NOW / LAND SOON, then critical descent, followed by normal terrain/wing advisories and BINGO FUEL. All warnings use the existing 12-second repeat cooldown, with immediate transitions into LAND NOW / PULL UP. An alert is only one at a time: Bingo and low-wing conditions are combined into LAND NOW instead of overlapping voice clips. Thresholds are provisional and need in-game tuning.
+Actual flight-velocity calculations are **not** real-world airspeed or G-force measurements. Thresholds will be tuned through gameplay testing. Highest-priority terrain/collision alerts take precedence over ordinary cautions.
 
-Configure the four new sounds under **Mod Menu → FMS → Configure → WINGS**. Older unused CHECK WINGS settings are preserved for existing configs but no longer generated by the new durability logic.
+### Sound controls
 
-Changes were committed directly to main but have not been compiled or playtested in this environment.
+In **Audio**, set audio ON/OFF, adjust volume, select warning clips, preview them, and toggle **Maneuvers**. The **Terrain** tab controls terrain warnings and their five sound assignments; **Wings** controls four Elytra-health/landing sounds. Most assignments can be switched to **off**, stock sounds, or imported custom clips.
 
-## Aviation-style master caution / warning tones
+The default sound names are identifiers; they do not imply that the game plays a master-caution beep before each spoken callout.
 
-Audio now has **two layers** on transitions into a new active alert. The first plays the short electronic attention tone, then (for non-immediate conditions) the assigned spoken alert after 500 ms. Continuing conditions replay their specific voice line on the existing 12-second interval **without** constantly replaying the beep. An emergency transition to PULL UP or LAND NOW plays the warning beep and voice immediately so the callout is not delayed.
+## Custom warning sounds
 
-- **CAUTION** (default `caution.ogg`): normal advisories such as BINGO FUEL, SINK RATE, ELYTRA HEALTH, and ALTITUDE.
-- **MASTER CAUTION** (`mastercaution.ogg`): elevated caution for LOW ELYTRA, TERRAIN AHEAD, and LOW TERRAIN.
-- **WARNING** (default `warning.ogg`): critical conditions including LAND SOON, LAND NOW, HIGH SPEED DESCENT, TERRAIN, and PULL UP.
+Players can import up to **16 OGG files** without modifying the mod JAR.
 
-In **Mod Menu → FMS → Configure → Audio**, toggle **TONES ON/OFF**, select and test the CAUTION TONE and WARNING TONE assignments. Tones also respect the global AUDIO enable and volume settings. The MASTER CAUTION stock tone is currently fixed for elevated cautions; users can override its OGG through a resource pack, and a separate in-menu assignment can be added later.
+1. Open **FMS Settings → Audio → OPEN FOLDER**, or browse to \`config/fms/sounds/\` in the current Minecraft game directory.
+2. Add clips such as \`my_alert.ogg\`. Names may use letters, digits, underscores, and hyphens, with at most 48 characters before \`.ogg\`. The extension must be lowercase.
+3. Return to settings and click **REFRESH**.
+4. FMS generates an unpacked resource pack at \`resourcepacks/FMS Custom Sounds/\`.
+5. In **Minecraft Options → Resource Packs**, **enable FMS Custom Sounds**. After adding or changing clips, reload resources (typically **F3+T**) so Minecraft recognizes them.
+6. Choose \`custom:my_alert\` in a sound-assignment selector and click **TEST**.
 
-The old CHECK WINGS entries on the Audio page were retired because wing-health warnings have their own WINGS tab. The tone layer is independent from alert-specific sound assignments. Nothing in this change affects Elytra movement or autopilot. Changes are committed to main but are not compiled or playtested here.
+Per-file limit: **8 MiB**. FMS checks the Ogg container signature, but the recording must actually be encoded in a playable Minecraft-compatible format (normally **OGG Vorbis**). MP3 and WAV are not directly supported by this importer.
 
-## Exclusive warning audio (terrain stress-test correction)
+Development instance paths are normally \`run/config/fms/sounds/\` and \`run/resourcepacks/FMS Custom Sounds/\`; actual launcher paths depend on the selected Minecraft profile. Custom clips do not require Xaero mods.
 
-The previous master-tone-then-voice playback queue has been removed. **No warning/master-caution beep automatically precedes a specific alert**. Instead, each condition plays **one** assigned sound at a time. Users can still choose `caution.ogg`, `mastercaution.ogg`, or `warning.ogg` as the sound assigned to any condition in Audio, Terrain, or Wings settings.
+## Configuration files
 
-FMS tracks its currently playing sound instance and stops only that FMS clip when starting a new alert or preview, without touching Minecraft or other mods' audio. The controller assigns explicit threat priorities: PULL UP > TERRAIN > LAND NOW > HIGH SPEED DESCENT > LAND SOON > terrain advisory > other advisories. Escalating threats interrupt immediately. A same-priority change must remain stable for 800 ms, a downgrade for 1800 ms, and a cleared alert for 700 ms; these hysteresis delays prevent near-ground `TERRAIN` / `PULL UP` ping-pong when buzzing structures. Repeats require the alert to persist for at least 12 seconds *and* the previous clip to finish.
+FMS user settings are stored in:
 
-Audio stops immediately when flight ends or FMS audio is muted. **HUD alert detection/rendering and threshold values are unchanged**, and remain preliminary. Flight warning sound playback is still a safety aid, not collision prediction guarantees. This change is source-committed and not locally compiled/playtested here; please run your usual Gradle build and try another village flyby.
+\`\`\`text
+.minecraft/
+├─ config/
+│  ├─ fms-hud.properties         # HUD, audio, terrain, cruise and map toggles
+│  └─ fms/
+│     └─ sounds/                # User-provided .ogg recordings
+└─ resourcepacks/
+   └─ FMS Custom Sounds/        # Auto-generated resource pack
+\`\`\`
 
-## Maneuver master caution (fighter-jet beeps)
+The exact \`.minecraft\` root may be replaced by a separate launcher profile/game directory.
 
-Two new flight advisories use `mastercaution.ogg` **by default**, giving the familiar triple-beep during aggressive Elytra maneuvers without layering it over voice clips:
+Notable persisted settings include \`hudMode\`, \`style\`, \`audioEnabled\`, \`audioVolume\`, \`terrainWarnings\`, \`maneuverWarnings\`, \`avoidXaeroMinimap\`, \`minimapCorner\`, \`cruiseGuidance\`, \`mapFlightPanel\`, \`cruiseClearance\`, \`cruiseOverrideY\`, \`blocksPerRocket\`, and \`rocketReserve\`.
 
-- **HARD TURN**: player is gliding faster than 14 blocks/sec and changes actual *movement direction* faster than about 55 degrees/sec for three filtered game ticks. Simply moving the mouse is not enough.
-- **STEEP DIVE**: player is moving horizontally at least 16 blocks/sec, falling faster than 11 blocks/sec and looking downward past 38 degrees. This does not imply a confirmed terrain collision.
+For manual file edits, close Minecraft first so in-game saves do not overwrite your changes. FMS destination coordinates are not persisted in this file.
 
-Both are provisional thresholds for tuning after actual flight testing. Higher-priority PULL UP / TERRAIN / LAND NOW conditions still interrupt them immediately through the single-channel audio controller. No pre-warning beeps, sound layering, or multiple voices. Existing 12-second repeat and downgrade stability rules still apply.
+## Development and building
 
-In Mod Menu → FMS → Configure → Audio, turn **MANEUVERS** ON/OFF and assign or test sounds for HARD TURN and STEEP DIVE independently. Defaults are `mastercaution.ogg` for both. All settings persist in `config/fms-hud.properties`.
+**Repository:** [CoachSludge/FMS](https://github.com/CoachSludge/FMS)
 
-This code was committed on main but has not been compiled or play-tested in this environment.
+\`\`\`powershell
+git pull origin main
+gradle clean build
+gradle runClient
+\`\`\`
 
-## Xaero's World Map flight destination bridge (Phase 2 MVP)
+On a Windows setup with Gradle 9.7.1 installed at \`C:\Gradle\`:
 
-Xaero's World Map and Xaero's Minimap share saved waypoint data. FMS can now **read** Xaero's saved waypoint files (no Xaero compile dependency) and navigate to their X/Z positions. Workflow:
+\`\`\`powershell
+& "C:\Gradle\gradle-9.7.1\bin\gradle.bat" clean build
+& "C:\Gradle\gradle-9.7.1\bin\gradle.bat" runClient
+\`\`\`
 
-1. Install Xaero's World Map and Xaero's Minimap for **Fabric Minecraft 26.3** in the same client. Open World Map (usually `M`) and create a waypoint at your desired flight destination.
-2. After saving/closing the waypoint editor, run `/fms xaero list`. FMS prints up to 20 numbered waypoints, showing the saved world and dimension for each.
-3. Run `/fms xaero select 1` (change the number to the desired item). The FMS HUD now uses its destination, distance, bearing and ETA displays.
-4. Run `/fms clear` to clear the FMS destination. Manual `/fms go <x> <z>` also remains available.
+The build should produce a mod JAR under \`build/libs/\`. Check the actual JAR filename and build results before distributing. \`gradle check\` runs the dependency-free \`FlightPlannerSmokeTest\` alongside other available checks.
 
-The read-only importer searches the active game directory's `xaero/minimap/<world>/dim%.../*.txt` (or legacy `XaeroWaypoints`), ignores disabled waypoints, and never changes Xaero's saved files. It does not inject a menu into Xaero's map GUI. Map right-click **Fly Here**, live waypoint selection sync, waypoint markers drawn by FMS on Xaero, multi-stop routes, altitude-aware cruise planning and automatic dimension/world matching are **not implemented yet**. **Verify that the listed waypoint's world and dimension are the current ones before selecting**, because the importer can list entries from old saves/servers and FMS uses X/Z coordinates only. This prevents implying the navigation is dimension-aware before that is implemented. Map changes must be saved before FMS can see them.
+### Project structure
 
-FMS needs no Xaero mod to launch; Xaero integration commands simply return an empty list without Xaero waypoint data. The importer is based on publicly documented Xaero waypoint on-disk formats and has not been compiled or playtested here.
+| Location | Purpose |
+| --- | --- |
+| \`src/main/java/cc/fentware/fms/client/\` | Minecraft client HUD, settings, audio, navigation, Xaero bridge |
+| \`src/main/java/cc/fentware/fms/core/\` | Calculation helpers and planning logic independent of Minecraft |
+| \`src/main/resources/assets/fms/\` | Bundled warning recordings and sound mappings |
+| \`src/test/\` | Smoke-test code |
+| \`docs/ARCHITECTURE.md\` | Technical architecture |
+| \`docs/ROADMAP.md\` | Planned development phases |
 
-## Phase 2 cruise flight director and estimated rocket budgeting
+## Known limitations and troubleshooting
 
-Once you set a destination with `/fms go X Z` or `/fms xaero select N`, FMS now estimates a cruise altitude and rocket budget and shows heading correction / climb advice on the aviation HUD. The boxed navigation panel shows CRZ Y, CLIMB/LEVEL/DESCEND, estimated rocket requirement and whether terrain coverage is incomplete.
+| Problem | What to check |
+| --- | --- |
+| FMS HUD is missing | Equip an Elytra, press **H**, check **HUD Visibility**, and confirm Fabric/API versions |
+| Sound warnings are silent | Check **M**, FMS Audio ON, FMS volume, Minecraft sound settings, and specific sound set to \`off\` |
+| Custom clip will not play | File is valid OGG Vorbis; click **REFRESH**, enable generated resource pack, reload resources |
+| Xaero list is empty | Both compatible Xaero mods are installed; waypoint was saved; its folder format matches the current reader |
+| Selected Xaero waypoint sends you to the wrong place | Check **world/dimension** listed in \`/fms xaero list\`; FMS does not auto-match them |
+| Xaero HUD overlaps FMS | In FMS HUD settings, turn **Xaero Space ON** and select the minimap's actual corner; inspect GUI scale |
+| World Map flight panel does not appear | Try \`/fms map on\`, \`/fms cruise on\`; Xaero's map screen hooks may have changed |
+| Rocket count seems inaccurate | It is a configurable heuristic, not a physics prediction. Adjust \`/fms cruise reach\` |
+| Cruise altitude appears too low or too high | The route may be partly **unloaded/unsurveyed**. Adjust manual cruise Y, but never assume it is safe |
+| Gradle build fails | Verify **Java 25**, **Gradle 9.7.1**, dependency versions, and read the first actual compiler error |
 
-**Rocket math (estimate only):** `travelRockets = ceil(remaining horizontal distance / configured blocksPerRocket)`; `totalRockets = travelRockets + reserve`. Default assumed range is **400 blocks per rocket**, with **2 reserve rockets**. This is a *tunable heuristic*, not a measurement of actual Minecraft flight range: speed, rocket duration, pitch, glide, windless Minecraft physics, and boosts will affect real use. Do not use the number as a guarantee that the player has enough fuel.
+**Prototype boundaries:** FMS does not currently provide click-to-fly map picking, advanced flight-route optimization, long-range Xaero terrain-cache surveying, multi-stop flight plans, verified safe clearance, automatic rockets, steering, assisted turns, autopilot, or emergency recovery. Its alerts and cruise recommendations are informative only.
 
-**Cruise altitude:** sample the loaded Minecraft heightmap along the first up to 768 blocks of the straight-line route (max 48 sample points), add a **40-block clearance margin** to the highest observed surface; when any segment is unloaded or the destination is farther away, also apply the fallback target **Y 250**, and label the route **UNKNOWN**. Clamp recommended Y to 64..300 as a provisional overworld-oriented flight-director range. This is never a safe-altitude certification: sparse samples can miss obstacles, and tall terrain can exceed the ceiling. The recommendation is updated from loaded terrain as you fly. Cruise Y can be manually overridden.
+## Roadmap
 
-**Advisory commands** (no automatic movement, rockets, turning, or pitch control):
-- `/fms cruise on` / `/fms cruise off` — show/hide the cruise flight director.
-- `/fms cruise auto` — use the local terrain-based suggested altitude.
-- `/fms cruise y 180` — manually target Y 180.
-- `/fms cruise reach 400` — set assumed horizontal reach in blocks per firework (100–2000).
-- `/fms cruise reserve 2` — reserve 2 rockets (0–16).
-- `/fms cruise status` — print destination heading, turning correction, Y target and approximate fuel budget.
+- **Phase 1 — Instruments and warnings:** Core HUD layouts, telemetry, sounds, warning priorities, settings. Implemented as a prototype; visual validation and tuning continue.
+- **Phase 2 — Terrain and navigation:** Local terrain awareness, destination commands, Xaero waypoints, map-side flight summary, cruise/rocket estimates. In progress. Planned: direct map selection, better terrain survey, multi-stop planning, arrival handling.
+- **Phase 3 — Flight assistance:** Potential flight director improvements, optional assisted flight, waypoint-following autopilot and emergency recovery. **Not implemented.**
 
-Headings use Minecraft's actual yaw convention. The flight director does not activate until a destination is selected and can be disabled without disabling the ordinary FMS warnings. The implementation is committed to main but has not been locally compiled or in-game tested here.
+For technical milestones see [docs/ROADMAP.md](docs/ROADMAP.md). This README describes the **current code**, rather than keeping earlier, superseded change logs in the main guide.
 
-## FMS panel inside Xaero's World Map
+---
 
-With **Xaero's World Map** installed, opening its fullscreen map now shows a compact **FMS / FLIGHT PLAN** information panel (upper-right, unless Xaero's menu design changes). It displays:
-
-- **YOU:** live X/Y/Z player position.
-- **TO:** currently selected FMS waypoint name and destination X/Z (from `/fms xaero select N` or `/fms go X Z`).
-- **DIST / HDG:** remaining straight-line horizontal distance and target bearing.
-- **CRUISE Y:** recommended cruise altitude and CLIMB/LEVEL/DESCEND advisory.
-- **ROCKETS:** estimated total rockets required (including reserve) versus rockets carried.
-- **TERRAIN:** survey is only local sampled loaded chunks; distant routes are not confirmed safe.
-
-Toggle with `/fms map on` or `/fms map off`. The panel is on by default; it is also hidden when cruise guidance is turned off. All toggles persist to `config/fms-hud.properties`.
-
-This is **display integration** using the Fabric `ScreenEvents.afterExtract` callback and detects Xaero's fullscreen map screen by name only when `xaeroworldmap` is installed. It does not modify Xaero classes or input. **Clicking a point on the map does not yet set the FMS destination**; save/select a Xaero waypoint via the existing FMS commands. Not compiled or verified in the game client here. If the panel does not appear, check Xaero's current fullscreen GUI class name and report the Minecraft log.
-
-## Vanilla HUD safe area (Survival friendly)
-
-FMS now avoids occupying the bottom of the game screen where vanilla draws its hotbar, XP, hearts, armor, hunger, air, and mount-related status. Boxed flight/navigation panels are vertically clamped after optional Xaero minimap avoidance; the HUD editor also prevents dragging them into this reserve. Aviation and Hybrid layouts now put destination/cruise information in compact side readouts instead of stacking it beneath the center instruments, and only draw footer labels that fit **above** the vanilla reserve.
-
-A conservative **78 GUI-pixel bottom margin** is used without Creative-style instant build abilities, and **42 pixels** in Creative. Vanilla GUI scale and mods that relocate default UI elements can change the required amount. This is a layout reserve, not a way to hide or alter vanilla UI. On unusually small windows, FMS may suppress lower-priority details rather than drawing over vanilla status bars. This update has not yet been locally compiled or visually tested at multiple GUI scales.
-
-## Aviation HUD top-corner collision fix
-
-Aviation/Hybrid destination, ETA, recommended cruise Y, turning correction and rocket estimate now share **one compact top-corner block**, positioned opposite the configured Xaero Minimap corner when minimap avoidance is enabled. The previous independent top-left destination and top-right cruise stacks could overlap the minimap or flight instrument tapes. At GUI widths below 700, nonessential rows are suppressed, and below 520 the HUD switches to a minimal navigation footer if it fits above the vanilla Survival bars. This is a conservative layout policy, not detection of Xaero's actual map dimensions; match the minimap corner in FMS HUD settings if the map is moved. This change is committed but not visually tested in-game.
+**FMS is developed by FentWare.** It is a community/client-side mod project; it is not affiliated with Mojang, Microsoft, or the Xaero mod authors. Check licenses and redistribution rights before publishing bundled or custom audio.
