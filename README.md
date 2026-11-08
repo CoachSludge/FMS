@@ -118,3 +118,11 @@ Test: `gradle clean build` and `gradle runClient`. Check the Mods list and confi
 ## Settings layout fix
 
 The settings screen now uses **HUD** and **AUDIO** tabs instead of one fixed-height panel. The AUDIO page contains five sound-assignment buttons with neighboring TEST buttons; click the assigned sound name to cycle through the six registered OGG clips or `off`. The smaller layout does not require scrolling at common GUI scales. Switch between pages using the tabs at the top. This code is committed to `main` but awaits a local Minecraft build/playtest.
+
+## Xaero's Minimap HUD coexistence
+
+FMS detects Xaero's Minimap when installed and offers **Xaero Space** in **FMS Settings → HUD** (enabled by default). Set **Minimap Corner** to match the position chosen in Xaero's own `Change Position` screen (defaults to top right). The boxed FMS flight/navigation panels will temporarily shift vertically if they overlap a reserved corner region; saved drag positions are left untouched. In AVIATION/HYBRID modes the main flight instruments stay in the screen center and do not move.
+
+This is a conservative **corner safe-area**, **not** direct access to Xaero's live minimap position or shape, and it is not a universal overlap detector. Players using custom non-corner positions or unusually large minimaps may need to move widgets manually using J, or disable Xaero Space. The reserve uses approximate scaled GUI dimensions. It requires no Xaero dependency and does not affect normal FMS use when Xaero is absent.
+
+This code is committed to `main` but needs a local Minecraft compile and visual test with Xaero's Minimap installed.
