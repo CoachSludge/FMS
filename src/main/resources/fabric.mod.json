@@ -4,15 +4,28 @@
   "version": "${version}",
   "name": "FMS - Elytra Flight Management System",
   "description": "Client-side Elytra flight instruments and terrain-aware navigation foundation.",
-  "authors": ["FentWare"],
+  "authors": [
+    "FentWare"
+  ],
   "environment": "client",
   "entrypoints": {
-    "client": ["cc.fentware.fms.client.FmsClient"]
+    "client": [
+      "cc.fentware.fms.client.FmsClient"
+    ],
+    "modmenu": [
+      "cc.fentware.fms.client.FmsModMenu"
+    ]
   },
   "depends": {
     "fabricloader": ">=0.19.5",
     "minecraft": "26.3",
     "java": ">=25",
     "fabric-api": "*"
+  },
+  "suggests": {
+    "modmenu": "*"
+  },
+  "contact": {
+    "sources": "https://github.com/CoachSludge/FMS"
   }
 }
