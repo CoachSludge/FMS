@@ -18,13 +18,17 @@ public final class FmsSounds {
     public static final SoundEvent LOW_TERRAIN = register("lowterrain");
     public static final SoundEvent TERRAIN = register("terrain");
     public static final SoundEvent TERRAIN_AHEAD = register("terrainahead");
+    public static final SoundEvent ELYTRA = register("elytra");
+    public static final SoundEvent LOW_ELYTRA = register("lowelytra");
+    public static final SoundEvent LAND = register("land");
+    public static final SoundEvent LAND_NOW = register("landnow");
 
     private static final SoundEvent[] CUSTOM = new SoundEvent[CustomSounds.MAX_SOUNDS];
     static {
         for (int i = 0; i < CUSTOM.length; i++) CUSTOM[i] = registerCustom(CustomSounds.slotId(i));
     }
 
-    public static final String[] NAMES = {"bingo", "warning", "caution", "pullup", "altitude", "mastercaution", "lowterrain", "terrain", "terrainahead", "off"};
+    public static final String[] NAMES = {"bingo", "warning", "caution", "pullup", "altitude", "mastercaution", "lowterrain", "terrain", "terrainahead", "elytra", "lowelytra", "land", "landnow", "off"};
 
     private FmsSounds() {}
 
@@ -49,6 +53,10 @@ public final class FmsSounds {
             case "lowterrain" -> LOW_TERRAIN;
             case "terrain" -> TERRAIN;
             case "terrainahead" -> TERRAIN_AHEAD;
+            case "elytra" -> ELYTRA;
+            case "lowelytra" -> LOW_ELYTRA;
+            case "land" -> LAND;
+            case "landnow" -> LAND_NOW;
             default -> null;
         };
     }
