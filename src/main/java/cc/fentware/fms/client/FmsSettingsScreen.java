@@ -38,15 +38,21 @@ public final class FmsSettingsScreen extends Screen {
         g.fill(x, y, x + WIDTH, y + HEIGHT, 0xEF10221B);
         g.fill(x, y, x + WIDTH, y + 2, GREEN);
         g.text(font, "FMS / SETTINGS", x + 9, y + 7, GREEN, true);
+        drawButton(g, x + 238, y + 5, 54, "DONE");
         drawButton(g, x + 8, y + 24, 139, "HUD" + (page == 0 ? "  [ACTIVE]" : ""));
         drawButton(g, x + 153, y + 24, 139, "AUDIO" + (page == 1 ? "  [ACTIVE]" : ""));
 
         if (page == 0) renderHudPage(g, x, y);
         else renderAudioPage(g, x, y);
 
-        g.fill(x + 8, y + 183, x + WIDTH - 8, y + 184, 0xFF396B52);
-        g.text(font, "Changes save automatically", x + 9, y + 190, MUTED, false);
-        drawButton(g, x + 238, y + 186, 54, "DONE");
+        g.fill(x + 8, y + 181, x + WIDTH - 8, y + 182, 0xFF396B52);
+        if (page == 1) {
+            drawButton(g, x + 8, y + 186, 111, "OPEN FOLDER");
+            drawButton(g, x + 125, y + 186, 111, "REFRESH");
+            g.text(font, CustomSounds.names().size() + " clips", x + 242, y + 190, MUTED, false);
+        } else {
+            g.text(font, "Changes save automatically", x + 9, y + 190, MUTED, false);
+        }
     }
 
     private void renderHudPage(GuiGraphicsExtractor g, int x, int y) {
@@ -94,7 +100,20 @@ public final class FmsSettingsScreen extends Screen {
 
         if (hit(mx, my, x + 8, y + 24, 139)) { page = 0; return true; }
         if (hit(mx, my, x + 153, y + 24, 139)) { page = 1; return true; }
-        if (hit(mx, my, x + 238, y + 186, 54)) { onClose(); return true; }
+        if (hit(mx, my, x + 238, y + 5, 54)) { onClose(); return true; }
+        if (page == 1 && hit(mx, my, x + 8, y + 186, 111)) {
+            try {
+                java.nio.file.Files.createDirectories(CustomSounds.DIRECTORY);
+                java.awt.Desktop.getDesktop().open(CustomSounds.DIRECTORY.toFile());
+            } catch (Exception e) {
+                System.err.println("[FMS] Could not open sounds folder: " + e.getMessage());
+            }
+            return true;
+        }
+        if (page == 1 && hit(mx, my, x + 125, y + 186, 111)) {
+            CustomSounds.refresh();
+            return true;
+        }
 
         if (page == 0) {
             if (hit(mx, my, x + 9, y + 64, 282)) {
