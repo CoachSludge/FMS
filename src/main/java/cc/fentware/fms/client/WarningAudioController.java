@@ -27,8 +27,10 @@ public final class WarningAudioController {
 
         long now = System.currentTimeMillis();
         boolean changed = !alert.message().equals(lastMessage);
+        // Allow urgent pull-up alert to override the transition delay.
+        boolean urgent = "PULL UP".equals(alert.message()) && changed;
         // A minimum separation protects against rapid oscillation between warnings.
-        if ((changed && now - lastSoundTime >= 1200) || (!changed && now - lastSoundTime >= REPEAT_MS)) {
+        if (urgent || (changed && now - lastSoundTime >= 1200) || (!changed && now - lastSoundTime >= REPEAT_MS)) {
             FmsSounds.play(soundFor(alert));
             lastSoundTime = now;
         }
@@ -42,6 +44,10 @@ public final class WarningAudioController {
             case "HIGH SPEED DESCENT" -> 2;
             case "CHECK WINGS" -> 3;
             case "CHECK WINGS - CRITICAL" -> 4;
+            case "LOW TERRAIN" -> 5;
+            case "TERRAIN AHEAD" -> 6;
+            case "TERRAIN" -> 7;
+            case "PULL UP" -> 8;
             default -> 1;
         };
         return FmsSounds.resolve(HudSettings.alertSound[index]);
