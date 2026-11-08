@@ -43,5 +43,25 @@
     "sounds": [
       "fms:warnings/terrainahead"
     ]
+  },
+  "elytra": {
+    "sounds": [
+      "fms:warnings/elytra"
+    ]
+  },
+  "lowelytra": {
+    "sounds": [
+      "fms:warnings/lowelytra"
+    ]
+  },
+  "land": {
+    "sounds": [
+      "fms:warnings/land"
+    ]
+  },
+  "landnow": {
+    "sounds": [
+      "fms:warnings/landnow"
+    ]
   }
 }
