@@ -34,3 +34,23 @@ java {
     toolchain.languageVersion = JavaLanguageVersion.of(25)
     withSourcesJar()
 }
+
+
+// The current smoke test is a standalone Java main(), not a JUnit test.
+// Gradle 9 fails when test sources exist but it finds no JUnit tests.
+tasks.named('test', Test) {
+    failOnNoDiscoveredTests = false
+}
+
+// Execute the existing smoke test as part of normal builds.
+tasks.register('coreSmokeTest', JavaExec) {
+    group = 'verification'
+    description = 'Run the dependency-free FMS flight-planner smoke tests.'
+    dependsOn tasks.named('testClasses')
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'cc.fentware.fms.core.FlightPlannerSmokeTest'
+}
+
+tasks.named('check') {
+    dependsOn tasks.named('coreSmokeTest')
+}
