@@ -97,7 +97,9 @@ public final class FmsHud {
             line(g, x, y, 36, "DEST  NOT SET", AMBER);
             line(g, x, y, 48, "ETA   --:--", MUTED);
         }
-        line(g, x, y, 62, "UNKNOWN TERRAIN: Y " + HudSettings.unknownCruiseY, AMBER);
+        line(g, x, y, 62, FmsClient.hasDestination()
+                ? "TO  " + truncate(FmsClient.destName(), 21)
+                : "UNKNOWN TERRAIN: Y " + HudSettings.unknownCruiseY, AMBER);
     }
 
     private static void drawWarning(GuiGraphicsExtractor g) {
@@ -112,6 +114,10 @@ public final class FmsHud {
         g.fill(x, y, x + WIDTH, y + 2, color);
         g.text(mc.font, "FMS WARNING", x + 7, y + 4, color, true);
         g.text(mc.font, alert.message(), x + 7, y + 14, color, true);
+    }
+
+    private static String truncate(String value, int max) {
+        return value.length() > max ? value.substring(0, max - 1) + "~" : value;
     }
 
     private static String eta(double seconds) {
