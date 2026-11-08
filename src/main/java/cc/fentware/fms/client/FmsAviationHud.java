@@ -129,6 +129,10 @@ public final class FmsAviationHud {
                     ? String.format(Locale.ROOT, "DST %.0f  ETA %s", dist, eta(dist / speed))
                     : String.format(Locale.ROOT, "DST %.0f  ETA --:--", dist);
             label(g, nav, Math.max(4, cx - nav.length() * 3), Math.min(h - 10, footY + 27), GREEN);
+            String destinationLabel = FmsClient.destName();
+            if (destinationLabel.length() > 22) destinationLabel = destinationLabel.substring(0, 21) + "~";
+            label(g, "TO " + destinationLabel, Math.max(4, cx - 65),
+                    Math.min(h - 10, footY + 40), AMBER);
         } else {
             label(g, "NAV NO DEST", cx - 35, Math.min(h - 10, footY + 27), AMBER);
         }
