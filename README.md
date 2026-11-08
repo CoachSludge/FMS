@@ -114,3 +114,7 @@ FMS implements the Mod Menu `modmenu` entrypoint and provides a config screen fa
 The Gradle development runtime includes Mod Menu `21.0.0` from Terraformers Maven for testing. End users are not required to install Mod Menu: FMS still works independently with its **O** shortcut. If you package a JAR, do not distribute Mod Menu inside it.
 
 Test: `gradle clean build` and `gradle runClient`. Check the Mods list and configure action on the title screen; verify that the in-game shortcut still works without Mod Menu. The new integration has not been locally compiled or launch-tested here.
+
+## Settings layout fix
+
+The settings screen now uses **HUD** and **AUDIO** tabs instead of one fixed-height panel. The AUDIO page contains five sound-assignment buttons with neighboring TEST buttons; click the assigned sound name to cycle through the six registered OGG clips or `off`. The smaller layout does not require scrolling at common GUI scales. Switch between pages using the tabs at the top. This code is committed to `main` but awaits a local Minecraft build/playtest.
