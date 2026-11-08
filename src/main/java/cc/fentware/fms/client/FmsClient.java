@@ -37,7 +37,13 @@ public final class FmsClient implements ClientModInitializer {
         KeyMapping preview = KeyMappingHelper.registerKeyMapping(new KeyMapping(
                 "key.fms.preview", InputConstants.Type.KEYBOARD, InputConstants.KEY_N, category));
 
+        KeyMapping settings = KeyMappingHelper.registerKeyMapping(new KeyMapping(
+                "key.fms.settings", InputConstants.Type.KEYBOARD, InputConstants.KEY_O, category));
+
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
+            while (settings.consumeClick()) {
+                if (client.player != null) client.gui.setScreen(new FmsSettingsScreen(null));
+            }
             while (mute.consumeClick()) {
                 HudSettings.audioEnabled = !HudSettings.audioEnabled;
                 HudSettings.save();
