@@ -6,94 +6,124 @@ import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
 
 /**
- * Simple clickable settings screen without relying on changing widget APIs.
- * Select a stock sound per warning; for custom audio replace sounds via a resource pack.
+ * Compact, paged FMS configuration screen.
+ * Fits in typical Minecraft scaled windows without requiring wheel scrolling.
+ * All hitboxes are based on the same origin and dimensions as the drawn buttons.
  */
 public final class FmsSettingsScreen extends Screen {
     private static final int GREEN = 0xFF72F3A4;
     private static final int WHITE = 0xFFFFFFFF;
     private static final int MUTED = 0xFFB0BBB4;
-    private static final String[] LABELS = {"BINGO FUEL", "SINK RATE", "HIGH SPEED DESCENT", "CHECK WINGS", "WINGS CRITICAL"};
+    private static final int AMBER = 0xFFFFC46C;
+    private static final int WIDTH = 300;
+    private static final int HEIGHT = 208;
+    private static final String[] LABELS = {
+        "BINGO FUEL", "SINK RATE", "HIGH SPEED DESCENT", "CHECK WINGS", "WINGS CRITICAL"
+    };
     private final Screen parent;
+    private int page = 1; // Open audio settings first, since they were previously inaccessible.
 
     public FmsSettingsScreen(Screen parent) {
         super(Component.literal("FMS Settings"));
         this.parent = parent;
     }
 
-    private int originX() { return (width - 310) / 2; }
-    private int originY() { return Math.max(12, (height - 272) / 2); }
+    private int originX() { return (width - WIDTH) / 2; }
+    private int originY() { return Math.max(2, (height - HEIGHT) / 2); }
 
     @Override
     public void extractRenderState(GuiGraphicsExtractor g, int mouseX, int mouseY, float delta) {
         super.extractRenderState(g, mouseX, mouseY, delta);
         int x = originX(), y = originY();
-        g.fill(x, y, x + 310, y + 268, 0xEF10221B);
-        g.fill(x, y, x + 310, y + 2, GREEN);
-        g.text(font, "FMS / SETTINGS", x + 10, y + 9, GREEN, true);
-        drawButton(g, x + 12, y + 29, 286, "HUD MODE: " + HudSettings.hudMode.name());
-        drawButton(g, x + 12, y + 52, 140, "STYLE: " + HudSettings.style.name());
-        drawButton(g, x + 158, y + 52, 140, "HUD: " + (HudSettings.enabled ? "ON" : "OFF"));
-        drawButton(g, x + 12, y + 76, 140, "AUDIO: " + (HudSettings.audioEnabled ? "ON" : "OFF"));
-        drawButton(g, x + 158, y + 76, 43, "VOL -");
-        drawButton(g, x + 208, y + 76, 40, HudSettings.audioVolume + "%");
-        drawButton(g, x + 255, y + 76, 43, "VOL +");
+        g.fill(x, y, x + WIDTH, y + HEIGHT, 0xEF10221B);
+        g.fill(x, y, x + WIDTH, y + 2, GREEN);
+        g.text(font, "FMS / SETTINGS", x + 9, y + 7, GREEN, true);
+        drawButton(g, x + 8, y + 24, 139, "HUD" + (page == 0 ? "  [ACTIVE]" : ""));
+        drawButton(g, x + 153, y + 24, 139, "AUDIO" + (page == 1 ? "  [ACTIVE]" : ""));
 
-        g.text(font, "ALERT", x + 13, y + 105, MUTED, false);
-        g.text(font, "SOUND (CLICK TO CYCLE)", x + 121, y + 105, MUTED, false);
+        if (page == 0) renderHudPage(g, x, y);
+        else renderAudioPage(g, x, y);
+
+        g.fill(x + 8, y + 183, x + WIDTH - 8, y + 184, 0xFF396B52);
+        g.text(font, "Changes save automatically", x + 9, y + 190, MUTED, false);
+        drawButton(g, x + 238, y + 186, 54, "DONE");
+    }
+
+    private void renderHudPage(GuiGraphicsExtractor g, int x, int y) {
+        g.text(font, "DISPLAY", x + 9, y + 51, AMBER, false);
+        drawButton(g, x + 9, y + 64, 282, "HUD VISIBILITY: " + HudSettings.hudMode.name());
+        drawButton(g, x + 9, y + 89, 282, "LAYOUT: " + HudSettings.style.name());
+        drawButton(g, x + 9, y + 114, 282, "HUD ENABLED: " + (HudSettings.enabled ? "YES" : "NO"));
+        g.text(font, "J - drag boxed widgets    K - cycle layout", x + 9, y + 150, MUTED, false);
+        g.text(font, "Elytra equipped = show automatically", x + 9, y + 162, MUTED, false);
+    }
+
+    private void renderAudioPage(GuiGraphicsExtractor g, int x, int y) {
+        drawButton(g, x + 8, y + 47, 110, "AUDIO: " + (HudSettings.audioEnabled ? "ON" : "OFF"));
+        drawButton(g, x + 126, y + 47, 45, "VOL -");
+        drawButton(g, x + 177, y + 47, 59, HudSettings.audioVolume + "%");
+        drawButton(g, x + 242, y + 47, 50, "VOL +");
+        g.text(font, "WARNING TYPE", x + 9, y + 72, MUTED, false);
+        g.text(font, "ASSIGNED SOUND", x + 125, y + 72, MUTED, false);
+
         for (int i = 0; i < LABELS.length; i++) {
-            int rowY = y + 119 + i * 22;
-            g.text(font, LABELS[i], x + 13, rowY + 5, WHITE, false);
-            drawButton(g, x + 120, rowY, 126, HudSettings.alertSound[i]);
-            drawButton(g, x + 250, rowY, 48, "TEST");
+            int rowY = y + 84 + i * 19;
+            g.text(font, LABELS[i], x + 9, rowY + 5, WHITE, false);
+            drawButton(g, x + 122, rowY, 112, HudSettings.alertSound[i]);
+            drawButton(g, x + 240, rowY, 52, "TEST");
         }
-        g.text(font, "Use resource packs to replace stock .ogg audio.", x + 12, y + 235, MUTED, false);
-        drawButton(g, x + 230, y + 246, 68, "DONE");
     }
 
     private void drawButton(GuiGraphicsExtractor g, int x, int y, int w, String label) {
-        g.fill(x, y, x + w, y + 19, 0xCC1D3D30);
-        g.fill(x, y + 18, x + w, y + 19, 0xFF396B52);
-        g.text(font, label, x + 4, y + 5, WHITE, false);
+        g.fill(x, y, x + w, y + 17, 0xDD1D3D30);
+        g.fill(x, y + 16, x + w, y + 17, 0xFF396B52);
+        g.text(font, label, x + 4, y + 4, WHITE, false);
     }
 
-    private static boolean hit(double px, double py, int x, int y, int w, int h) {
-        return px >= x && px < x + w && py >= y && py < y + h;
+    private static boolean hit(double px, double py, int x, int y, int w) {
+        return px >= x && px < x + w && py >= y && py < y + 17;
     }
 
     @Override
     public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
         double mx = event.x(), my = event.y();
         int x = originX(), y = originY();
-        if (hit(mx, my, x + 12, y + 29, 286, 19)) {
-            HudSettings.hudMode = HudSettings.HudMode.values()[(HudSettings.hudMode.ordinal() + 1) % HudSettings.HudMode.values().length];
-        } else if (hit(mx, my, x + 12, y + 52, 140, 19)) {
-            HudSettings.cycleStyle();
-        } else if (hit(mx, my, x + 158, y + 52, 140, 19)) {
-            HudSettings.enabled = !HudSettings.enabled;
-        } else if (hit(mx, my, x + 12, y + 76, 140, 19)) {
-            HudSettings.audioEnabled = !HudSettings.audioEnabled;
-        } else if (hit(mx, my, x + 158, y + 76, 43, 19)) {
-            HudSettings.audioVolume = Math.max(0, HudSettings.audioVolume - 10);
-        } else if (hit(mx, my, x + 255, y + 76, 43, 19)) {
-            HudSettings.audioVolume = Math.min(100, HudSettings.audioVolume + 10);
-        } else if (hit(mx, my, x + 230, y + 246, 68, 19)) {
-            onClose();
-            return true;
+
+        if (hit(mx, my, x + 8, y + 24, 139)) { page = 0; return true; }
+        if (hit(mx, my, x + 153, y + 24, 139)) { page = 1; return true; }
+        if (hit(mx, my, x + 238, y + 186, 54)) { onClose(); return true; }
+
+        if (page == 0) {
+            if (hit(mx, my, x + 9, y + 64, 282)) {
+                HudSettings.hudMode = HudSettings.HudMode.values()[
+                    (HudSettings.hudMode.ordinal() + 1) % HudSettings.HudMode.values().length];
+            } else if (hit(mx, my, x + 9, y + 89, 282)) {
+                HudSettings.cycleStyle();
+            } else if (hit(mx, my, x + 9, y + 114, 282)) {
+                HudSettings.enabled = !HudSettings.enabled;
+            } else return super.mouseClicked(event, doubleClick);
         } else {
-            for (int i = 0; i < LABELS.length; i++) {
-                int rowY = y + 119 + i * 22;
-                if (hit(mx, my, x + 120, rowY, 126, 19)) {
-                    HudSettings.alertSound[i] = FmsSounds.nextName(HudSettings.alertSound[i]);
-                    HudSettings.save();
-                    return true;
+            if (hit(mx, my, x + 8, y + 47, 110)) {
+                HudSettings.audioEnabled = !HudSettings.audioEnabled;
+            } else if (hit(mx, my, x + 126, y + 47, 45)) {
+                HudSettings.audioVolume = Math.max(0, HudSettings.audioVolume - 10);
+            } else if (hit(mx, my, x + 242, y + 47, 50)) {
+                HudSettings.audioVolume = Math.min(100, HudSettings.audioVolume + 10);
+            } else {
+                for (int i = 0; i < LABELS.length; i++) {
+                    int rowY = y + 84 + i * 19;
+                    if (hit(mx, my, x + 122, rowY, 112)) {
+                        HudSettings.alertSound[i] = FmsSounds.nextName(HudSettings.alertSound[i]);
+                        HudSettings.save();
+                        return true;
+                    }
+                    if (hit(mx, my, x + 240, rowY, 52)) {
+                        FmsSounds.previewName(HudSettings.alertSound[i]);
+                        return true;
+                    }
                 }
-                if (hit(mx, my, x + 250, rowY, 48, 19)) {
-                    FmsSounds.previewName(HudSettings.alertSound[i]);
-                    return true;
-                }
+                return super.mouseClicked(event, doubleClick);
             }
-            return super.mouseClicked(event, doubleClick);
         }
         HudSettings.save();
         return true;
