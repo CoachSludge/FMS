@@ -40,6 +40,7 @@ public final class FmsClient implements ClientModInitializer {
         FmsSounds.initialize();
         HudSettings.load();
         FmsCommands.register();
+        XaeroMapFlightOverlay.initialize();
         KeyMapping.Category category = KeyMapping.Category.register(Identifier.fromNamespaceAndPath("fms", "flight"));
         KeyMapping toggle = KeyMappingHelper.registerKeyMapping(new KeyMapping(
                 "key.fms.toggle", InputConstants.Type.KEYBOARD, InputConstants.KEY_H, category));
