@@ -188,3 +188,16 @@ The previous master-tone-then-voice playback queue has been removed. **No warnin
 FMS tracks its currently playing sound instance and stops only that FMS clip when starting a new alert or preview, without touching Minecraft or other mods' audio. The controller assigns explicit threat priorities: PULL UP > TERRAIN > LAND NOW > HIGH SPEED DESCENT > LAND SOON > terrain advisory > other advisories. Escalating threats interrupt immediately. A same-priority change must remain stable for 800 ms, a downgrade for 1800 ms, and a cleared alert for 700 ms; these hysteresis delays prevent near-ground `TERRAIN` / `PULL UP` ping-pong when buzzing structures. Repeats require the alert to persist for at least 12 seconds *and* the previous clip to finish.
 
 Audio stops immediately when flight ends or FMS audio is muted. **HUD alert detection/rendering and threshold values are unchanged**, and remain preliminary. Flight warning sound playback is still a safety aid, not collision prediction guarantees. This change is source-committed and not locally compiled/playtested here; please run your usual Gradle build and try another village flyby.
+
+## Maneuver master caution (fighter-jet beeps)
+
+Two new flight advisories use `mastercaution.ogg` **by default**, giving the familiar triple-beep during aggressive Elytra maneuvers without layering it over voice clips:
+
+- **HARD TURN**: player is gliding faster than 14 blocks/sec and changes actual *movement direction* faster than about 55 degrees/sec for three filtered game ticks. Simply moving the mouse is not enough.
+- **STEEP DIVE**: player is moving horizontally at least 16 blocks/sec, falling faster than 11 blocks/sec and looking downward past 38 degrees. This does not imply a confirmed terrain collision.
+
+Both are provisional thresholds for tuning after actual flight testing. Higher-priority PULL UP / TERRAIN / LAND NOW conditions still interrupt them immediately through the single-channel audio controller. No pre-warning beeps, sound layering, or multiple voices. Existing 12-second repeat and downgrade stability rules still apply.
+
+In Mod Menu → FMS → Configure → Audio, turn **MANEUVERS** ON/OFF and assign or test sounds for HARD TURN and STEEP DIVE independently. Defaults are `mastercaution.ogg` for both. All settings persist in `config/fms-hud.properties`.
+
+This code was committed on main but has not been compiled or play-tested in this environment.
