@@ -32,10 +32,7 @@ public final class FlightWarnings {
         switch (terrain.threat()) {
             case PULL_UP -> { return new Alert("PULL UP", Severity.CRITICAL); }
             case TERRAIN -> { return new Alert("TERRAIN", Severity.CRITICAL); }
-            case TERRAIN_AHEAD -> { return new Alert("TERRAIN AHEAD", Severity.CAUTION); }
-            case LOW_TERRAIN -> { return new Alert("LOW TERRAIN", Severity.CAUTION); }
-            case ALTITUDE -> { return new Alert("ALTITUDE", Severity.CAUTION); }
-            case NONE -> { }
+            default -> { }
         }
         // Elytra durability in Minecraft is usually 432 points; percentage
         // thresholds provide meaningful landing warnings before the last few HP.
@@ -48,12 +45,17 @@ public final class FlightWarnings {
             return new Alert("LAND NOW", Severity.CRITICAL);
         if (percent <= 8)
             return new Alert("LAND SOON", Severity.CRITICAL);
+        if (descent > 32 && horizontalSpeed > 15) return new Alert("HIGH SPEED DESCENT", Severity.CRITICAL);
+        switch (terrain.threat()) {
+            case TERRAIN_AHEAD -> { return new Alert("TERRAIN AHEAD", Severity.CAUTION); }
+            case LOW_TERRAIN -> { return new Alert("LOW TERRAIN", Severity.CAUTION); }
+            case ALTITUDE -> { return new Alert("ALTITUDE", Severity.CAUTION); }
+            default -> { }
+        }
         if (percent <= 15)
             return new Alert("LOW ELYTRA", Severity.CAUTION);
         if (percent <= 35)
             return new Alert("ELYTRA HEALTH", Severity.CAUTION);
-        if (descent > 32 && horizontalSpeed > 15) return new Alert("HIGH SPEED DESCENT", Severity.CRITICAL);
-
         if (descent > 16) return new Alert("SINK RATE", Severity.CAUTION);
         if (rockets <= 3) return new Alert("BINGO FUEL", Severity.CAUTION);
         return Alert.none();
