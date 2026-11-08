@@ -38,8 +38,16 @@ public final class FmsHud {
             FmsAviationHud.render(g, HudSettings.style == HudSettings.Style.HYBRID);
             return;
         }
-        drawInstruments(g, px(HudSettings.instrumentsX, g.guiWidth()), py(HudSettings.instrumentsY, g.guiHeight()));
-        drawNavigation(g, px(HudSettings.navigationX, g.guiWidth()), py(HudSettings.navigationY, g.guiHeight()));
+        int instrumentsX = px(HudSettings.instrumentsX, g.guiWidth());
+        int instrumentsY = XaeroHudCompat.avoid(instrumentsX,
+                py(HudSettings.instrumentsY, g.guiHeight()), WIDTH, INSTRUMENT_HEIGHT,
+                g.guiWidth(), g.guiHeight());
+        int navigationX = px(HudSettings.navigationX, g.guiWidth());
+        int navigationY = XaeroHudCompat.avoid(navigationX,
+                py(HudSettings.navigationY, g.guiHeight()), WIDTH, NAV_HEIGHT,
+                g.guiWidth(), g.guiHeight());
+        drawInstruments(g, instrumentsX, instrumentsY);
+        drawNavigation(g, navigationX, navigationY);
         drawWarning(g);
     }
 
