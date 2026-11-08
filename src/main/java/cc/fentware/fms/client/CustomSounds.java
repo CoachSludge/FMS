@@ -76,7 +76,7 @@ public final class CustomSounds {
                 StringBuilder soundJson = new StringBuilder("{");
                 for (int i = 0; i < files.size(); i++) {
                     if (i > 0) soundJson.append(',');
-                    soundJson.append('"').append(slotId(i)).append("":{\"sounds\":[\"fms_custom:clips/")
+                    soundJson.append('"').append(slotId(i)).append("\":{\"sounds\":[\"fms_custom:clips/")
                             .append(slotId(i)).append("\"]}");
                     add(zip, "assets/fms_custom/sounds/clips/" + slotId(i) + ".ogg",
                             Files.readAllBytes(DIRECTORY.resolve(files.get(i) + ".ogg")));
