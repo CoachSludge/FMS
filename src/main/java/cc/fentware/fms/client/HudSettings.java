@@ -20,8 +20,8 @@ public final class HudSettings {
     public static boolean avoidXaeroMinimap = true;
     public static MinimapCorner minimapCorner = MinimapCorner.TOP_RIGHT;
     public static HudMode hudMode = HudMode.ELYTRA_EQUIPPED;
-    /** Alert assignments: bingo, sink, descent, wings, critical wings, low terrain, terrain ahead, terrain, pull up, altitude. */
-    public static String[] alertSound = {"bingo", "caution", "warning", "mastercaution", "warning", "lowterrain", "terrainahead", "terrain", "pullup", "altitude"};
+    /** Alert assignments: bingo, sink, descent, wings, critical wings, low terrain, terrain ahead, terrain, pull up, altitude, elytra, low elytra, land, land now. */
+    public static String[] alertSound = {"bingo", "caution", "warning", "mastercaution", "warning", "lowterrain", "terrainahead", "terrain", "pullup", "altitude", "elytra", "lowelytra", "land", "landnow"};
     public static Style style = Style.AVIATION;
     public static void cycleStyle() {
         Style[] styles = Style.values();
