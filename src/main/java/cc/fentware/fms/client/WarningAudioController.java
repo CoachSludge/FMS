@@ -48,6 +48,7 @@ public final class WarningAudioController {
             case "TERRAIN AHEAD" -> 6;
             case "TERRAIN" -> 7;
             case "PULL UP" -> 8;
+            case "ALTITUDE" -> 9;
             default -> 1;
         };
         return FmsSounds.resolve(HudSettings.alertSound[index]);
