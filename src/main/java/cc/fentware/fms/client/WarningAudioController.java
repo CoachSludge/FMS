@@ -36,12 +36,14 @@ public final class WarningAudioController {
     }
 
     private static SoundEvent soundFor(FlightWarnings.Alert alert) {
-        return switch (alert.message()) {
-            case "BINGO FUEL" -> FmsSounds.BINGO;
-            case "SINK RATE" -> FmsSounds.CAUTION;
-            case "HIGH SPEED DESCENT" -> FmsSounds.WARNING;
-            case "CHECK WINGS", "CHECK WINGS - CRITICAL" -> FmsSounds.MASTER_CAUTION;
-            default -> FmsSounds.CAUTION;
+        int index = switch (alert.message()) {
+            case "BINGO FUEL" -> 0;
+            case "SINK RATE" -> 1;
+            case "HIGH SPEED DESCENT" -> 2;
+            case "CHECK WINGS" -> 3;
+            case "CHECK WINGS - CRITICAL" -> 4;
+            default -> 1;
         };
+        return FmsSounds.resolve(HudSettings.alertSound[index]);
     }
 }
