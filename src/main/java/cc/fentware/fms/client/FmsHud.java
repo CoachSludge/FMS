@@ -39,13 +39,16 @@ public final class FmsHud {
             return;
         }
         int instrumentsX = px(HudSettings.instrumentsX, g.guiWidth());
-        int instrumentsY = XaeroHudCompat.avoid(instrumentsX,
-                py(HudSettings.instrumentsY, g.guiHeight()), WIDTH, INSTRUMENT_HEIGHT,
-                g.guiWidth(), g.guiHeight());
+        int instrumentsY = VanillaHudSafeArea.clampPanel(
+                XaeroHudCompat.avoid(instrumentsX,
+                        py(HudSettings.instrumentsY, g.guiHeight()), WIDTH, INSTRUMENT_HEIGHT,
+                        g.guiWidth(), g.guiHeight()), INSTRUMENT_HEIGHT, g.guiHeight());
         int navigationX = px(HudSettings.navigationX, g.guiWidth());
-        int navigationY = XaeroHudCompat.avoid(navigationX,
-                py(HudSettings.navigationY, g.guiHeight()), WIDTH, NAV_HEIGHT,
-                g.guiWidth(), g.guiHeight());
+        int navigationY = VanillaHudSafeArea.clampPanel(
+                XaeroHudCompat.avoid(navigationX,
+                        py(HudSettings.navigationY, g.guiHeight()), WIDTH, NAV_HEIGHT,
+                        g.guiWidth(), g.guiHeight()), NAV_HEIGHT, g.guiHeight());
+        // Keep the boxed panels out of the vanilla Survival status area.
         drawInstruments(g, instrumentsX, instrumentsY);
         drawNavigation(g, navigationX, navigationY);
         drawWarning(g);
