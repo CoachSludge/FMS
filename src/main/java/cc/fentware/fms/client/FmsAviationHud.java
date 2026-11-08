@@ -107,15 +107,22 @@ public final class FmsAviationHud {
         label(g, String.format(Locale.ROOT, "%.1f", speed), speedX, cy - 5, GREEN);
         label(g, String.format(Locale.ROOT, "%.0f", altitude), altX + 3, cy - 5, GREEN);
 
-        int footY = Math.min(h - 22, bottom + 23);
-        label(g, String.format(Locale.ROOT, "VS %+05.1f", vertical), cx - 25, footY, vertical < -16 ? AMBER : GREEN);
+        // Put navigation data in side columns above the vanilla hotbar and
+        // Survival health/armor/food rows. Never clamp many lines to the same
+        // bottom pixel: on small GUIs, omit lower-priority extra lines instead.
+        int safeBottom = VanillaHudSafeArea.bottom(mc, h);
+        int footY = Math.min(bottom + 14, Math.max(top + 12, safeBottom - 44));
+        statusLabel(g, String.format(Locale.ROOT, "VS %+05.1f", vertical),
+                Math.max(4, cx - 35), footY, vertical < -16 ? AMBER : GREEN, h);
         TerrainAwareness.Reading local = TerrainAwareness.current();
         if (Double.isFinite(local.clearance())) {
-            label(g, String.format(Locale.ROOT, "AGL %.0f", Math.max(0, local.clearance())),
-                    Math.max(4, cx - 100), footY, local.clearance() < 25 ? AMBER : GREEN);
+            statusLabel(g, String.format(Locale.ROOT, "AGL %.0f", Math.max(0, local.clearance())),
+                    Math.max(4, cx - 108), footY, local.clearance() < 25 ? AMBER : GREEN, h);
         }
-        label(g, "WING " + durability, Math.max(5, cx - 110), Math.min(h - 12, footY + 13), durability <= 20 ? RED : GREEN);
-        label(g, "RKT " + rocketCount, Math.min(w - 48, cx + 65), Math.min(h - 12, footY + 13), rocketCount <= 3 ? AMBER : GREEN);
+        statusLabel(g, "WING " + durability, Math.max(5, cx - 105),
+                footY + 12, durability <= 20 ? RED : GREEN, h);
+        statusLabel(g, "RKT " + rocketCount, Math.min(w - 55, cx + 57),
+                footY + 12, rocketCount <= 3 ? AMBER : GREEN, h);
 
         if (FmsClient.hasDestination()) {
             double dx = FmsClient.destX() - mc.player.getX();
@@ -125,35 +132,39 @@ public final class FmsAviationHud {
             double delta = wrapDegrees(bearing - mc.player.getYRot());
             int navX = cx + (int) Math.round(clamp(delta * 2.0, -half, half));
             label(g, "NAV", navX - 10, headingY + 10, AMBER);
-            String nav = speed > .5
-                    ? String.format(Locale.ROOT, "DST %.0f  ETA %s", dist, eta(dist / speed))
-                    : String.format(Locale.ROOT, "DST %.0f  ETA --:--", dist);
-            label(g, nav, Math.max(4, cx - nav.length() * 3), Math.min(h - 10, footY + 27), GREEN);
+
+            // Split concise nav readouts across separate upper left/right
+            // blocks, rather than stacking them over vanilla Survival UI.
+            int detailY = Math.max(34, headingY + 22);
             String destinationLabel = FmsClient.destName();
-            if (destinationLabel.length() > 22) destinationLabel = destinationLabel.substring(0, 21) + "~";
-            label(g, "TO " + destinationLabel, Math.max(4, cx - 65),
-                    Math.min(h - 10, footY + 40), AMBER);
+            if (destinationLabel.length() > 18) destinationLabel = destinationLabel.substring(0, 17) + "~";
+            statusLabel(g, "TO " + destinationLabel, 6, detailY, AMBER, h);
+            statusLabel(g, String.format(Locale.ROOT, "DST %.0f", dist), 6, detailY + 12, GREEN, h);
+            statusLabel(g, speed > .5 ? "ETA " + eta(dist / speed) : "ETA --:--",
+                    6, detailY + 24, GREEN, h);
+
             if (HudSettings.cruiseGuidance) {
                 CruiseGuidance.Guidance plan = CruiseGuidance.current();
                 if (plan != null) {
                     String correction = Math.abs(plan.headingError()) < 5 ? "ON HDG"
                             : plan.headingError() > 0 ? "TURN R " + Math.round(plan.headingError())
                             : "TURN L " + Math.round(-plan.headingError());
-                    label(g, "CRZ Y " + plan.recommendedY() + " " + plan.altitudeAdvice() + "  " + correction,
-                            Math.max(4, cx - 95), Math.min(h - 10, footY + 53), AMBER);
-                    label(g, "RKT ~" + plan.fuel().totalRockets() + " / " + plan.fuel().availableRockets()
-                                    + (plan.completeSurvey() ? " LOCAL" : " UNKNOWN ROUTE"),
-                            Math.max(4, cx - 92), Math.min(h - 10, footY + 66),
-                            plan.fuel().sufficient() ? GREEN : AMBER);
+                    int rightX = Math.max(6, w - 142);
+                    statusLabel(g, "CRZ Y " + plan.recommendedY() + " " + plan.altitudeAdvice(),
+                            rightX, detailY, AMBER, h);
+                    statusLabel(g, correction, rightX, detailY + 12, GREEN, h);
+                    statusLabel(g, "RKT ~" + plan.fuel().totalRockets() + "/" + plan.fuel().availableRockets()
+                                    + (plan.completeSurvey() ? "" : " ?"),
+                            rightX, detailY + 24, plan.fuel().sufficient() ? GREEN : AMBER, h);
                 }
             }
         } else {
-            label(g, "NAV NO DEST", cx - 35, Math.min(h - 10, footY + 27), AMBER);
+            statusLabel(g, "NAV NO DEST", Math.max(4, cx - 35), footY + 24, AMBER, h);
         }
 
         if (hybrid && !FmsClient.hasDestination()) {
-            label(g, "UNSURVEYED TERRAIN  Y " + HudSettings.unknownCruiseY, Math.max(4, cx - 85),
-                    Math.min(h - 10, footY + 53), AMBER);
+            statusLabel(g, "UNSURVEYED TERRAIN Y " + HudSettings.unknownCruiseY,
+                    Math.max(4, cx - 85), footY + 36, AMBER, h);
         }
         // Phase 1 has no terrain survey: do not present altitude guidance as confirmed safe.
         FlightWarnings.Alert alert = FlightWarnings.current();
@@ -182,6 +193,9 @@ public final class FmsAviationHud {
     }
     private static void vline(GuiGraphicsExtractor g, int x, int y, int length, int color) {
         if (length > 0) g.fill(x, y, x + 1, y + length, color);
+    }
+    private static void statusLabel(GuiGraphicsExtractor g, String text, int x, int y, int color, int height) {
+        if (VanillaHudSafeArea.textFits(y, height)) label(g, text, x, y, color);
     }
     private static void label(GuiGraphicsExtractor g, String text, int x, int y, int color) {
         g.text(Minecraft.getInstance().font, text, x, y, color, true);
