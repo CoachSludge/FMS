@@ -34,6 +34,7 @@ public final class FlightWarnings {
             case TERRAIN -> { return new Alert("TERRAIN", Severity.CRITICAL); }
             case TERRAIN_AHEAD -> { return new Alert("TERRAIN AHEAD", Severity.CAUTION); }
             case LOW_TERRAIN -> { return new Alert("LOW TERRAIN", Severity.CAUTION); }
+            case ALTITUDE -> { return new Alert("ALTITUDE", Severity.CAUTION); }
             case NONE -> { }
         }
         // Flight-state warnings remain available whenever no terrain threat is higher priority.
