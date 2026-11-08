@@ -121,6 +121,19 @@ public final class FmsCommands {
                         }
                         return 1;
                     })))
+                .then(literal("map")
+                    .then(literal("on").executes(context -> {
+                        HudSettings.mapFlightPanel = true;
+                        HudSettings.save();
+                        tell("[FMS] Xaero World Map flight panel ON.");
+                        return 1;
+                    }))
+                    .then(literal("off").executes(context -> {
+                        HudSettings.mapFlightPanel = false;
+                        HudSettings.save();
+                        tell("[FMS] Xaero World Map flight panel OFF.");
+                        return 1;
+                    })))
                 .then(literal("clear").executes(context -> {
                     FmsClient.clearDestination();
                     if (Minecraft.getInstance().player != null) {
