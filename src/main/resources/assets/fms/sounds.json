@@ -28,5 +28,20 @@
     "sounds": [
       "fms:warnings/mastercaution"
     ]
+  },
+  "lowterrain": {
+    "sounds": [
+      "fms:warnings/lowterrain"
+    ]
+  },
+  "terrain": {
+    "sounds": [
+      "fms:warnings/terrain"
+    ]
+  },
+  "terrainahead": {
+    "sounds": [
+      "fms:warnings/terrainahead"
+    ]
   }
 }
