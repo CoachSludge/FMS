@@ -16,8 +16,8 @@ public final class HudEditorScreen extends Screen {
     @Override
     public void extractRenderState(GuiGraphicsExtractor g, int mouseX, int mouseY, float delta) {
         super.extractRenderState(g, mouseX, mouseY, delta);
-        FmsHud.drawInstruments(g, FmsHud.px(HudSettings.instrumentsX, this.width), FmsHud.py(HudSettings.instrumentsY, this.height));
-        FmsHud.drawNavigation(g, FmsHud.px(HudSettings.navigationX, this.width), FmsHud.py(HudSettings.navigationY, this.height));
+        FmsHud.drawInstruments(g, FmsHud.px(HudSettings.instrumentsX, this.width), VanillaHudSafeArea.clampPanel(FmsHud.py(HudSettings.instrumentsY, this.height), FmsHud.INSTRUMENT_HEIGHT, this.height));
+        FmsHud.drawNavigation(g, FmsHud.px(HudSettings.navigationX, this.width), VanillaHudSafeArea.clampPanel(FmsHud.py(HudSettings.navigationY, this.height), FmsHud.NAV_HEIGHT, this.height));
         g.centeredText(this.font, "FMS HUD EDITOR  -  Drag panels  -  ESC to save", this.width / 2, 18, 0xFF72F3A4);
     }
 
@@ -39,7 +39,9 @@ public final class HudEditorScreen extends Screen {
     public boolean mouseDragged(MouseButtonEvent event, double dx, double dy) {
         if (dragging < 0) return super.mouseDragged(event, dx, dy);
         double nx = clamp((event.x() - offsetX) / Math.max(1, width - FmsHud.WIDTH));
-        double ny = clamp((event.y() - offsetY) / Math.max(1, height - FmsHud.INSTRUMENT_HEIGHT));
+        int panelHeight = dragging == 0 ? FmsHud.INSTRUMENT_HEIGHT : FmsHud.NAV_HEIGHT;
+        int allowedY = VanillaHudSafeArea.clampPanel((int) Math.round(event.y() - offsetY), panelHeight, height);
+        double ny = clamp(allowedY / (double) Math.max(1, height - FmsHud.INSTRUMENT_HEIGHT));
         if (dragging == 0) { HudSettings.instrumentsX = nx; HudSettings.instrumentsY = ny; }
         else { HudSettings.navigationX = nx; HudSettings.navigationY = ny; }
         return true;
