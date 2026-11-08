@@ -201,3 +201,16 @@ Both are provisional thresholds for tuning after actual flight testing. Higher-p
 In Mod Menu → FMS → Configure → Audio, turn **MANEUVERS** ON/OFF and assign or test sounds for HARD TURN and STEEP DIVE independently. Defaults are `mastercaution.ogg` for both. All settings persist in `config/fms-hud.properties`.
 
 This code was committed on main but has not been compiled or play-tested in this environment.
+
+## Xaero's World Map flight destination bridge (Phase 2 MVP)
+
+Xaero's World Map and Xaero's Minimap share saved waypoint data. FMS can now **read** Xaero's saved waypoint files (no Xaero compile dependency) and navigate to their X/Z positions. Workflow:
+
+1. Install Xaero's World Map and Xaero's Minimap for **Fabric Minecraft 26.3** in the same client. Open World Map (usually `M`) and create a waypoint at your desired flight destination.
+2. After saving/closing the waypoint editor, run `/fms xaero list`. FMS prints up to 20 numbered waypoints, showing the saved world and dimension for each.
+3. Run `/fms xaero select 1` (change the number to the desired item). The FMS HUD now uses its destination, distance, bearing and ETA displays.
+4. Run `/fms clear` to clear the FMS destination. Manual `/fms go <x> <z>` also remains available.
+
+The read-only importer searches the active game directory's `xaero/minimap/<world>/dim%.../*.txt` (or legacy `XaeroWaypoints`), ignores disabled waypoints, and never changes Xaero's saved files. It does not inject a menu into Xaero's map GUI. Map right-click **Fly Here**, live waypoint selection sync, waypoint markers drawn by FMS on Xaero, multi-stop routes, altitude-aware cruise planning and automatic dimension/world matching are **not implemented yet**. **Verify that the listed waypoint's world and dimension are the current ones before selecting**, because the importer can list entries from old saves/servers and FMS uses X/Z coordinates only. This prevents implying the navigation is dimension-aware before that is implemented. Map changes must be saved before FMS can see them.
+
+FMS needs no Xaero mod to launch; Xaero integration commands simply return an empty list without Xaero waypoint data. The importer is based on publicly documented Xaero waypoint on-disk formats and has not been compiled or playtested here.
