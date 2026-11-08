@@ -180,3 +180,11 @@ Audio now has **two layers** on transitions into a new active alert. The first p
 In **Mod Menu → FMS → Configure → Audio**, toggle **TONES ON/OFF**, select and test the CAUTION TONE and WARNING TONE assignments. Tones also respect the global AUDIO enable and volume settings. The MASTER CAUTION stock tone is currently fixed for elevated cautions; users can override its OGG through a resource pack, and a separate in-menu assignment can be added later.
 
 The old CHECK WINGS entries on the Audio page were retired because wing-health warnings have their own WINGS tab. The tone layer is independent from alert-specific sound assignments. Nothing in this change affects Elytra movement or autopilot. Changes are committed to main but are not compiled or playtested here.
+
+## Exclusive warning audio (terrain stress-test correction)
+
+The previous master-tone-then-voice playback queue has been removed. **No warning/master-caution beep automatically precedes a specific alert**. Instead, each condition plays **one** assigned sound at a time. Users can still choose `caution.ogg`, `mastercaution.ogg`, or `warning.ogg` as the sound assigned to any condition in Audio, Terrain, or Wings settings.
+
+FMS tracks its currently playing sound instance and stops only that FMS clip when starting a new alert or preview, without touching Minecraft or other mods' audio. The controller assigns explicit threat priorities: PULL UP > TERRAIN > LAND NOW > HIGH SPEED DESCENT > LAND SOON > terrain advisory > other advisories. Escalating threats interrupt immediately. A same-priority change must remain stable for 800 ms, a downgrade for 1800 ms, and a cleared alert for 700 ms; these hysteresis delays prevent near-ground `TERRAIN` / `PULL UP` ping-pong when buzzing structures. Repeats require the alert to persist for at least 12 seconds *and* the previous clip to finish.
+
+Audio stops immediately when flight ends or FMS audio is muted. **HUD alert detection/rendering and threshold values are unchanged**, and remain preliminary. Flight warning sound playback is still a safety aid, not collision prediction guarantees. This change is source-committed and not locally compiled/playtested here; please run your usual Gradle build and try another village flyby.
