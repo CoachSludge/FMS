@@ -10,6 +10,13 @@ import java.util.Properties;
 /** Two independent panel positions; uses normalized screen-space coordinates. */
 public final class HudSettings {
     private static final Path PATH = FabricLoader.getInstance().getConfigDir().resolve("fms-hud.properties");
+    public enum Style { BOXED, AVIATION, HYBRID }
+    public static Style style = Style.AVIATION;
+    public static void cycleStyle() {
+        Style[] styles = Style.values();
+        style = styles[(style.ordinal() + 1) % styles.length];
+        save();
+    }
     public static boolean enabled = true;
     public static double instrumentsX = 0.02, instrumentsY = 0.12;
     public static double navigationX = 0.76, navigationY = 0.12;
@@ -24,6 +31,8 @@ public final class HudSettings {
         try (InputStream in = Files.newInputStream(PATH)) {
             p.load(in);
             enabled = Boolean.parseBoolean(p.getProperty("enabled", "true"));
+            try { style = Style.valueOf(p.getProperty("style", "AVIATION")); }
+            catch (IllegalArgumentException ignored) { style = Style.AVIATION; }
             instrumentsX = fraction(p, "instrumentsX", 0.02);
             instrumentsY = fraction(p, "instrumentsY", 0.12);
             navigationX = fraction(p, "navigationX", 0.76);
@@ -42,6 +51,7 @@ public final class HudSettings {
     public static void save() {
         Properties p = new Properties();
         p.setProperty("enabled", String.valueOf(enabled));
+        p.setProperty("style", style.name());
         p.setProperty("instrumentsX", String.valueOf(instrumentsX));
         p.setProperty("instrumentsY", String.valueOf(instrumentsY));
         p.setProperty("navigationX", String.valueOf(navigationX));
