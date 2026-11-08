@@ -14,7 +14,7 @@ import java.util.Locale;
 public final class FmsHud {
     static final int WIDTH = 164;
     static final int INSTRUMENT_HEIGHT = 112;
-    static final int NAV_HEIGHT = 77;
+    static final int NAV_HEIGHT = 115;
     private static final int PANEL = 0xB8101B17;
     private static final int BORDER = 0xAA3A7657;
     private static final int MUTED = 0xFF9CB5A6;
@@ -100,6 +100,17 @@ public final class FmsHud {
         line(g, x, y, 62, FmsClient.hasDestination()
                 ? "TO  " + truncate(FmsClient.destName(), 21)
                 : "UNKNOWN TERRAIN: Y " + HudSettings.unknownCruiseY, AMBER);
+        if (FmsClient.hasDestination() && HudSettings.cruiseGuidance) {
+            CruiseGuidance.Guidance flight = CruiseGuidance.current();
+            if (flight != null) {
+                line(g, x, y, 74, "CRZ Y " + flight.recommendedY() + " " + flight.altitudeAdvice(),
+                        flight.completeSurvey() ? HudSettings.color : AMBER);
+                line(g, x, y, 86, "RKT EST " + flight.fuel().totalRockets() + " / "
+                        + flight.fuel().availableRockets(), flight.fuel().sufficient() ? HudSettings.color : AMBER);
+                line(g, x, y, 98, flight.completeSurvey() ? "TERRAIN LOCAL CHECK"
+                        : "ROUTE NOT SURVEYED", AMBER);
+            }
+        }
     }
 
     private static void drawWarning(GuiGraphicsExtractor g) {
