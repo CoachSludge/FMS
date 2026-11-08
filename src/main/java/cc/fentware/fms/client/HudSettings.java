@@ -12,6 +12,13 @@ public final class HudSettings {
     private static final Path PATH = FabricLoader.getInstance().getConfigDir().resolve("fms-hud.properties");
     public enum Style { BOXED, AVIATION, HYBRID }
     public enum HudMode { ALWAYS, ELYTRA_EQUIPPED, ONLY_FLYING }
+    public enum MinimapCorner {
+        TOP_RIGHT, TOP_LEFT, BOTTOM_RIGHT, BOTTOM_LEFT;
+        public boolean isRight() { return this == TOP_RIGHT || this == BOTTOM_RIGHT; }
+        public boolean isBottom() { return this == BOTTOM_RIGHT || this == BOTTOM_LEFT; }
+    }
+    public static boolean avoidXaeroMinimap = true;
+    public static MinimapCorner minimapCorner = MinimapCorner.TOP_RIGHT;
     public static HudMode hudMode = HudMode.ELYTRA_EQUIPPED;
     /** Individual alert assignments: bingo, sink rate, fast descent, wings, critical wings. */
     public static String[] alertSound = {"bingo", "caution", "warning", "mastercaution", "warning"};
@@ -37,6 +44,9 @@ public final class HudSettings {
         try (InputStream in = Files.newInputStream(PATH)) {
             p.load(in);
             enabled = Boolean.parseBoolean(p.getProperty("enabled", "true"));
+            avoidXaeroMinimap = Boolean.parseBoolean(p.getProperty("avoidXaeroMinimap", "true"));
+            try { minimapCorner = MinimapCorner.valueOf(p.getProperty("minimapCorner", "TOP_RIGHT")); }
+            catch (IllegalArgumentException ignored) { minimapCorner = MinimapCorner.TOP_RIGHT; }
             try { hudMode = HudMode.valueOf(p.getProperty("hudMode", "ELYTRA_EQUIPPED")); }
             catch (IllegalArgumentException ignored) { hudMode = HudMode.ELYTRA_EQUIPPED; }
             for (int i = 0; i < alertSound.length; i++) {
@@ -66,6 +76,8 @@ public final class HudSettings {
     public static void save() {
         Properties p = new Properties();
         p.setProperty("enabled", String.valueOf(enabled));
+        p.setProperty("avoidXaeroMinimap", String.valueOf(avoidXaeroMinimap));
+        p.setProperty("minimapCorner", minimapCorner.name());
         p.setProperty("hudMode", hudMode.name());
         for (int i = 0; i < alertSound.length; i++) p.setProperty("alertSound." + i, alertSound[i]);
         p.setProperty("audioEnabled", String.valueOf(audioEnabled));
