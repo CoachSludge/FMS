@@ -28,7 +28,7 @@ public final class WarningAudioController {
         long now = System.currentTimeMillis();
         boolean changed = !alert.message().equals(lastMessage);
         // Allow urgent pull-up alert to override the transition delay.
-        boolean urgent = "PULL UP".equals(alert.message()) && changed;
+        boolean urgent = ("PULL UP".equals(alert.message()) || "LAND NOW".equals(alert.message())) && changed;
         // A minimum separation protects against rapid oscillation between warnings.
         if (urgent || (changed && now - lastSoundTime >= 1200) || (!changed && now - lastSoundTime >= REPEAT_MS)) {
             FmsSounds.play(soundFor(alert));
@@ -49,6 +49,10 @@ public final class WarningAudioController {
             case "TERRAIN" -> 7;
             case "PULL UP" -> 8;
             case "ALTITUDE" -> 9;
+            case "ELYTRA HEALTH" -> 10;
+            case "LOW ELYTRA" -> 11;
+            case "LAND SOON" -> 12;
+            case "LAND NOW" -> 13;
             default -> 1;
         };
         return FmsSounds.resolve(HudSettings.alertSound[index]);
