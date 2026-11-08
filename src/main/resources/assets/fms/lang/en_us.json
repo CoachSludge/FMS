@@ -4,5 +4,6 @@
   "key.fms.editor": "Edit FMS HUD layout",
   "key.fms.style": "Cycle FMS HUD style (Boxed / Aviation / Hybrid)",
   "key.fms.mute": "Toggle FMS warning audio",
-  "key.fms.preview": "Preview FMS master caution sound"
+  "key.fms.preview": "Preview FMS master caution sound",
+  "key.fms.settings": "Open FMS settings"
 }
