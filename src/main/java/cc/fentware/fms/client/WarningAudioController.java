@@ -4,72 +4,95 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.sounds.SoundEvent;
 
 /**
- * Trigger audio on warning transitions, not every HUD frame.
- * Sound is one-shot with per-alert cooldown; never claims terrain-aware collision detection.
+ * A single prioritized FMS alert channel.
+ *
+ * An escalating emergency interrupts immediately; recovery/downgrade must
+ * remain stable before the next announcement. No layered tones or queued voice
+ * clips: only one sound can play at a time.
  */
 public final class WarningAudioController {
-    private static String lastMessage = "";
-    private static String pendingVoice = "";
-    private static long pendingAt;
-    private static long lastSoundTime;
+    private static FlightWarnings.Alert active = FlightWarnings.Alert.none();
+    private static String observed = "";
+    private static long observedSince;
+    private static long lastAnnounced;
     private static final long REPEAT_MS = 12000;
-    private static final long TRANSITION_MS = 1200;
-    private static final long TONE_GAP_MS = 500;
+    private static final long EQUAL_CHANGE_MS = 800;
+    private static final long DOWNGRADE_MS = 1800;
+    private static final long CLEAR_MS = 700;
 
     private WarningAudioController() {}
 
     public static void tick(Minecraft client) {
-        if (client.player == null || !client.player.isFallFlying() || !HudSettings.audioEnabled) {
-            reset();
-            return;
-        }
-        FlightWarnings.Alert alert = FlightWarnings.current();
-        if (alert.severity() == FlightWarnings.Severity.NONE) {
+        if (client.player == null || !client.player.isFallFlying()
+                || !HudSettings.audioEnabled || HudSettings.audioVolume == 0) {
             reset();
             return;
         }
 
+        FlightWarnings.Alert candidate = FlightWarnings.current();
         long now = System.currentTimeMillis();
-        boolean changed = !alert.message().equals(lastMessage);
-
-        // Drop queued callouts if the actual active warning has changed.
-        if (!pendingVoice.isEmpty() && !pendingVoice.equals(alert.message())) pendingVoice = "";
-        if (!pendingVoice.isEmpty() && now >= pendingAt) {
-            FmsSounds.play(soundFor(alert));
-            pendingVoice = "";
+        if (!candidate.message().equals(observed)) {
+            observed = candidate.message();
+            observedSince = now;
         }
 
-        boolean urgent = ("PULL UP".equals(alert.message()) || "LAND NOW".equals(alert.message())) && changed;
-        boolean due = changed ? now - lastSoundTime >= TRANSITION_MS : now - lastSoundTime >= REPEAT_MS;
-        if (urgent || due) {
-            // Master tones on warning transitions; repeats play the named callout only.
-            String selectedTone = alert.severity() == FlightWarnings.Severity.CRITICAL
-                    ? HudSettings.criticalTone
-                    : isElevatedCaution(alert.message()) ? "mastercaution" : HudSettings.cautionTone;
-            boolean shouldTone = changed && HudSettings.warningTones && FmsSounds.resolve(selectedTone) != null;
-            if (shouldTone) FmsSounds.previewName(selectedTone);
-            if (urgent || !shouldTone) {
-                // Critical flight danger must not wait for a tone to finish.
-                FmsSounds.play(soundFor(alert));
-                pendingVoice = "";
-            } else {
-                pendingVoice = alert.message();
-                pendingAt = now + TONE_GAP_MS;
+        if (!candidate.message().equals(active.message())) {
+            int nextPriority = priority(candidate);
+            int oldPriority = priority(active);
+            long stableFor = now - observedSince;
+            long requiredStability = nextPriority > oldPriority ? 0
+                    : nextPriority == oldPriority ? EQUAL_CHANGE_MS
+                    : nextPriority == 0 ? CLEAR_MS : DOWNGRADE_MS;
+
+            if (stableFor >= requiredStability) {
+                active = candidate;
+                lastAnnounced = now;
+                if (active.severity() == FlightWarnings.Severity.NONE) {
+                    FmsSounds.stopWarningAudio();
+                } else {
+                    // A new, higher-priority alert cuts the old clip immediately.
+                    // Beeping tones are never overlaid before spoken warnings.
+                    FmsSounds.play(soundFor(active));
+                }
             }
-            lastSoundTime = now;
+            return;
         }
-        lastMessage = alert.message();
+
+        // Only repeat a persistent alert when its previous clip is finished.
+        if (active.severity() != FlightWarnings.Severity.NONE
+                && now - lastAnnounced >= REPEAT_MS
+                && !FmsSounds.isWarningPlaying()) {
+            FmsSounds.play(soundFor(active));
+            lastAnnounced = now;
+        }
     }
 
-    private static boolean isElevatedCaution(String message) {
-        return "LOW ELYTRA".equals(message) || "TERRAIN AHEAD".equals(message)
-                || "LOW TERRAIN".equals(message);
+    private static int priority(FlightWarnings.Alert alert) {
+        return switch (alert.message()) {
+            case "PULL UP" -> 100;
+            case "TERRAIN" -> 95;
+            case "LAND NOW" -> 90;
+            case "HIGH SPEED DESCENT" -> 85;
+            case "LAND SOON" -> 80;
+            case "TERRAIN AHEAD" -> 65;
+            case "LOW TERRAIN" -> 60;
+            case "LOW ELYTRA" -> 55;
+            case "ALTITUDE" -> 50;
+            case "ELYTRA HEALTH" -> 40;
+            case "SINK RATE" -> 35;
+            case "BINGO FUEL" -> 30;
+            case "CHECK WINGS - CRITICAL" -> 80;
+            case "CHECK WINGS" -> 45;
+            default -> alert.severity() == FlightWarnings.Severity.NONE ? 0 : 20;
+        };
     }
 
     private static void reset() {
-        lastMessage = "";
-        pendingVoice = "";
-        lastSoundTime = 0;
+        FmsSounds.stopWarningAudio();
+        active = FlightWarnings.Alert.none();
+        observed = "";
+        observedSince = 0;
+        lastAnnounced = 0;
     }
 
     private static SoundEvent soundFor(FlightWarnings.Alert alert) {
