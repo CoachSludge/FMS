@@ -54,8 +54,11 @@ public final class FmsSettingsScreen extends Screen {
         drawButton(g, x + 9, y + 64, 282, "HUD VISIBILITY: " + HudSettings.hudMode.name());
         drawButton(g, x + 9, y + 89, 282, "LAYOUT: " + HudSettings.style.name());
         drawButton(g, x + 9, y + 114, 282, "HUD ENABLED: " + (HudSettings.enabled ? "YES" : "NO"));
-        g.text(font, "J - drag boxed widgets    K - cycle layout", x + 9, y + 150, MUTED, false);
-        g.text(font, "Elytra equipped = show automatically", x + 9, y + 162, MUTED, false);
+        drawButton(g, x + 9, y + 136, 282,
+                "XAERO SPACE: " + (HudSettings.avoidXaeroMinimap ? "ON" : "OFF"));
+        drawButton(g, x + 9, y + 159, 282,
+                "MINIMAP CORNER: " + HudSettings.minimapCorner.name());
+
     }
 
     private void renderAudioPage(GuiGraphicsExtractor g, int x, int y) {
@@ -101,6 +104,11 @@ public final class FmsSettingsScreen extends Screen {
                 HudSettings.cycleStyle();
             } else if (hit(mx, my, x + 9, y + 114, 282)) {
                 HudSettings.enabled = !HudSettings.enabled;
+            } else if (hit(mx, my, x + 9, y + 136, 282)) {
+                HudSettings.avoidXaeroMinimap = !HudSettings.avoidXaeroMinimap;
+            } else if (hit(mx, my, x + 9, y + 159, 282)) {
+                HudSettings.MinimapCorner[] corners = HudSettings.MinimapCorner.values();
+                HudSettings.minimapCorner = corners[(HudSettings.minimapCorner.ordinal() + 1) % corners.length];
             } else return super.mouseClicked(event, doubleClick);
         } else {
             if (hit(mx, my, x + 8, y + 47, 110)) {
