@@ -20,14 +20,15 @@ public final class HudSettings {
     public static boolean avoidXaeroMinimap = true;
     public static MinimapCorner minimapCorner = MinimapCorner.TOP_RIGHT;
     public static HudMode hudMode = HudMode.ELYTRA_EQUIPPED;
-    /** Individual alert assignments: bingo, sink rate, fast descent, wings, critical wings. */
-    public static String[] alertSound = {"bingo", "caution", "warning", "mastercaution", "warning"};
+    /** Alert assignments: bingo, sink, descent, wings, critical wings, low terrain, terrain ahead, terrain, pull up. */
+    public static String[] alertSound = {"bingo", "caution", "warning", "mastercaution", "warning", "lowterrain", "terrainahead", "terrain", "pullup"};
     public static Style style = Style.AVIATION;
     public static void cycleStyle() {
         Style[] styles = Style.values();
         style = styles[(style.ordinal() + 1) % styles.length];
         save();
     }
+    public static boolean terrainWarnings = true;
     public static boolean audioEnabled = true;
     public static int audioVolume = 75;
     public static boolean enabled = true;
@@ -53,6 +54,7 @@ public final class HudSettings {
                 String stored = p.getProperty("alertSound." + i, alertSound[i]);
                 if (FmsSounds.validName(stored)) alertSound[i] = stored;
             }
+            terrainWarnings = Boolean.parseBoolean(p.getProperty("terrainWarnings", "true"));
             audioEnabled = Boolean.parseBoolean(p.getProperty("audioEnabled", "true"));
             try { audioVolume = Math.max(0, Math.min(100, Integer.parseInt(p.getProperty("audioVolume", "75")))); }
             catch (NumberFormatException ignored) { audioVolume = 75; }
@@ -80,6 +82,7 @@ public final class HudSettings {
         p.setProperty("minimapCorner", minimapCorner.name());
         p.setProperty("hudMode", hudMode.name());
         for (int i = 0; i < alertSound.length; i++) p.setProperty("alertSound." + i, alertSound[i]);
+        p.setProperty("terrainWarnings", String.valueOf(terrainWarnings));
         p.setProperty("audioEnabled", String.valueOf(audioEnabled));
         p.setProperty("audioVolume", String.valueOf(audioVolume));
         p.setProperty("style", style.name());
