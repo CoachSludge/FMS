@@ -57,3 +57,13 @@ Build requirements: **JDK 25**, **Gradle 9.7.1**, Minecraft **26.3**, Fabric Loa
 ## Development phases
 
 See [docs/ROADMAP.md](docs/ROADMAP.md). Phase 1: HUD and basic telemetry warnings. Phase 2: Xaero terrain calculations, safe-altitude planning, and real terrain lookahead. Phase 3: opt-in, player-overridable assisted flight and experimental emergency recovery. All changes currently go directly to `main`.
+
+## Phase 1.5 — aviation HUD (prototype)
+
+- Default mode is **AVIATION**: transparent center reticle, pitch ladder, horizon, velocity-derived flight-path marker, heading tape, speed/altitude tapes, vertical speed, wing durability, rocket reserves, destination cue and warning text.
+- **K** cycles `BOXED -> AVIATION -> HYBRID -> BOXED`, with the selection saved in `config/fms-hud.properties`.
+- **H** toggles the entire HUD. **J** still opens the original draggable **boxed-panel** layout editor; per-instrument dragging for cockpit symbology is not implemented yet.
+- **HYBRID** currently uses the same cockpit overlay plus the explicit unknown-terrain Y=250 advisory; it does not yet place configurable mini-panels.
+- No bank/roll simulation and no terrain awareness yet. Flight-path symbology is based on sampled movement, not a physics simulator. Pitch ladder and tapes are an initial stylized pass for testing.
+
+Build and test locally with `gradle clean build` then `gradle runClient`; no CI or GitHub Actions workflow.
