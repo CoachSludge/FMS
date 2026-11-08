@@ -67,3 +67,23 @@ See [docs/ROADMAP.md](docs/ROADMAP.md). Phase 1: HUD and basic telemetry warning
 - No bank/roll simulation and no terrain awareness yet. Flight-path symbology is based on sampled movement, not a physics simulator. Pitch ladder and tapes are an initial stylized pass for testing.
 
 Build and test locally with `gradle clean build` then `gradle runClient`; no CI or GitHub Actions workflow.
+
+## Phase 1 warning audio
+
+Six stock `.ogg` files are registered through `assets/fms/sounds.json`: `bingo`, `warning`, `caution`, `pullup`, `altitude`, `mastercaution`.
+
+Current warning-to-clip mapping:
+- `BINGO FUEL` → `bingo.ogg`
+- `SINK RATE` → `caution.ogg`
+- `HIGH SPEED DESCENT` → `warning.ogg`
+- `CHECK WINGS` and `CHECK WINGS - CRITICAL` → `mastercaution.ogg`
+- `pullup.ogg` and `altitude.ogg` are installed but **not automatically triggered** yet; they need phase-two terrain/altitude validation.
+
+The warning system plays one selected alert at a time, on changes (minimum 1.2 seconds separation), then repeats the same alert at most every 12 seconds. It clears warning state when Elytra flight ends.
+
+- **M** toggles FMS warning sounds (persisted).
+- **N** previews the master caution sound.
+- Change `audioEnabled=true/false` and `audioVolume=0..100` in `config/fms-hud.properties` (edit while Minecraft is closed); these are interim settings until the full settings screen is built.
+- Playback is client-side, independent of the HUD visibility toggle. Test with your Minecraft master/UI audio levels enabled.
+
+Audio integration is source-committed but **not yet compiled or playtested** after this change. Run `gradle clean build` followed by `gradle runClient`. Redistribution rights for uploaded audio remain the responsibility of the project.
