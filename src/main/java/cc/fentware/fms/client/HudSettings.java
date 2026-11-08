@@ -29,6 +29,9 @@ public final class HudSettings {
         save();
     }
     public static boolean terrainWarnings = true;
+    public static boolean warningTones = true;
+    public static String cautionTone = "mastercaution";
+    public static String criticalTone = "warning";
     public static boolean audioEnabled = true;
     public static int audioVolume = 75;
     public static boolean enabled = true;
@@ -55,6 +58,11 @@ public final class HudSettings {
                 if (FmsSounds.validName(stored)) alertSound[i] = stored;
             }
             terrainWarnings = Boolean.parseBoolean(p.getProperty("terrainWarnings", "true"));
+            warningTones = Boolean.parseBoolean(p.getProperty("warningTones", "true"));
+            String caution = p.getProperty("cautionTone", cautionTone);
+            String critical = p.getProperty("criticalTone", criticalTone);
+            if (FmsSounds.validName(caution)) cautionTone = caution;
+            if (FmsSounds.validName(critical)) criticalTone = critical;
             audioEnabled = Boolean.parseBoolean(p.getProperty("audioEnabled", "true"));
             try { audioVolume = Math.max(0, Math.min(100, Integer.parseInt(p.getProperty("audioVolume", "75")))); }
             catch (NumberFormatException ignored) { audioVolume = 75; }
@@ -83,6 +91,9 @@ public final class HudSettings {
         p.setProperty("hudMode", hudMode.name());
         for (int i = 0; i < alertSound.length; i++) p.setProperty("alertSound." + i, alertSound[i]);
         p.setProperty("terrainWarnings", String.valueOf(terrainWarnings));
+        p.setProperty("warningTones", String.valueOf(warningTones));
+        p.setProperty("cautionTone", cautionTone);
+        p.setProperty("criticalTone", criticalTone);
         p.setProperty("audioEnabled", String.valueOf(audioEnabled));
         p.setProperty("audioVolume", String.valueOf(audioVolume));
         p.setProperty("style", style.name());
