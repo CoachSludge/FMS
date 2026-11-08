@@ -31,7 +31,7 @@ public final class FmsClient implements ClientModInitializer {
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
             while (toggle.consumeClick()) { HudSettings.enabled = !HudSettings.enabled; HudSettings.save(); }
             while (edit.consumeClick()) {
-                if (client.player != null) client.setScreen(new HudEditorScreen());
+                if (client.player != null) client.gui.setScreen(new HudEditorScreen());
             }
         });
         HudElementRegistry.addLast(Identifier.fromNamespaceAndPath("fms", "flight_hud"), FmsHud::render);
