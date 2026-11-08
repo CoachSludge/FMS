@@ -124,6 +124,9 @@ public final class FmsAviationHud {
         statusLabel(g, "RKT " + rocketCount, Math.min(w - 55, cx + 57),
                 footY + 12, rocketCount <= 3 ? AMBER : GREEN, h);
 
+        // One compact navigation block, in the corner opposite Xaero's
+        // minimap. The old left + right stacks collided with both the map
+        // and the heading/speed tapes. Small GUIs omit secondary details.
         if (FmsClient.hasDestination()) {
             double dx = FmsClient.destX() - mc.player.getX();
             double dz = FmsClient.destZ() - mc.player.getZ();
@@ -133,30 +136,42 @@ public final class FmsAviationHud {
             int navX = cx + (int) Math.round(clamp(delta * 2.0, -half, half));
             label(g, "NAV", navX - 10, headingY + 10, AMBER);
 
-            // Split concise nav readouts across separate upper left/right
-            // blocks, rather than stacking them over vanilla Survival UI.
-            int detailY = Math.max(34, headingY + 22);
-            String destinationLabel = FmsClient.destName();
-            if (destinationLabel.length() > 18) destinationLabel = destinationLabel.substring(0, 17) + "~";
-            statusLabel(g, "TO " + destinationLabel, 6, detailY, AMBER, h);
-            statusLabel(g, String.format(Locale.ROOT, "DST %.0f", dist), 6, detailY + 12, GREEN, h);
-            statusLabel(g, speed > .5 ? "ETA " + eta(dist / speed) : "ETA --:--",
-                    6, detailY + 24, GREEN, h);
-
-            if (HudSettings.cruiseGuidance) {
-                CruiseGuidance.Guidance plan = CruiseGuidance.current();
-                if (plan != null) {
-                    String correction = Math.abs(plan.headingError()) < 5 ? "ON HDG"
-                            : plan.headingError() > 0 ? "TURN R " + Math.round(plan.headingError())
-                            : "TURN L " + Math.round(-plan.headingError());
-                    int rightX = Math.max(6, w - 142);
-                    statusLabel(g, "CRZ Y " + plan.recommendedY() + " " + plan.altitudeAdvice(),
-                            rightX, detailY, AMBER, h);
-                    statusLabel(g, correction, rightX, detailY + 12, GREEN, h);
-                    statusLabel(g, "RKT ~" + plan.fuel().totalRockets() + "/" + plan.fuel().availableRockets()
-                                    + (plan.completeSurvey() ? "" : " ?"),
-                            rightX, detailY + 24, plan.fuel().sufficient() ? GREEN : AMBER, h);
+            if (w >= 520) {
+                boolean mapOnLeft = XaeroHudCompat.enabled()
+                        && !HudSettings.minimapCorner.isRight();
+                int blockX = mapOnLeft ? w - 155 : 7;
+                int blockY = 7;
+                String destinationLabel = FmsClient.destName();
+                if (destinationLabel.length() > 19)
+                    destinationLabel = destinationLabel.substring(0, 18) + "~";
+                statusLabel(g, "TO " + destinationLabel, blockX, blockY, AMBER, h);
+                statusLabel(g, String.format(Locale.ROOT, "DST %.0f  ETA %s",
+                        dist, speed > 0.5 ? eta(dist / speed) : "--:--"),
+                        blockX, blockY + 12, GREEN, h);
+                if (HudSettings.cruiseGuidance) {
+                    CruiseGuidance.Guidance plan = CruiseGuidance.current();
+                    if (plan != null) {
+                        String correction = Math.abs(plan.headingError()) < 5 ? "ON HDG"
+                                : plan.headingError() > 0 ? "R " + Math.round(plan.headingError())
+                                : "L " + Math.round(-plan.headingError());
+                        statusLabel(g, "CRZ " + plan.recommendedY() + " " + plan.altitudeAdvice()
+                                + "  " + correction, blockX, blockY + 24, AMBER, h);
+                        if (w >= 700) {
+                            statusLabel(g, "RKT ~" + plan.fuel().totalRockets()
+                                    + " / " + plan.fuel().availableRockets(),
+                                    blockX, blockY + 36,
+                                    plan.fuel().sufficient() ? GREEN : AMBER, h);
+                            statusLabel(g, plan.completeSurvey() ? "LOCAL TERRAIN ONLY"
+                                    : "ROUTE NOT SURVEYED",
+                                    blockX, blockY + 48, AMBER, h);
+                        }
+                    }
                 }
+            } else {
+                // Keep narrow-screen navigation in the central footer, only
+                // where it fits above Minecraft's vanilla Survival bars.
+                statusLabel(g, "DST " + Math.round(dist) + "  NAV",
+                        Math.max(4, cx - 46), footY + 24, AMBER, h);
             }
         } else {
             statusLabel(g, "NAV NO DEST", Math.max(4, cx - 35), footY + 24, AMBER, h);
