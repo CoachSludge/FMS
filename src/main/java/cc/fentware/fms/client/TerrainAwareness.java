@@ -10,7 +10,7 @@ import net.minecraft.world.phys.Vec3;
  * Heightmaps do not detect overhangs, caves, or every horizontal obstacle.
  */
 public final class TerrainAwareness {
-    public enum Threat { NONE, LOW_TERRAIN, TERRAIN_AHEAD, TERRAIN, PULL_UP }
+    public enum Threat { NONE, ALTITUDE, LOW_TERRAIN, TERRAIN_AHEAD, TERRAIN, PULL_UP }
     public record Reading(Threat threat, double clearance, double timeToTerrain, boolean complete) {
         public static Reading unknown() { return new Reading(Threat.NONE, Double.NaN, Double.NaN, false); }
     }
@@ -49,7 +49,8 @@ public final class TerrainAwareness {
         double localHeight = level.getHeight(Heightmap.Types.MOTION_BLOCKING, x, z);
         double clearance = y - localHeight;
         // Ground-level caution uses measured loaded local surface, not global Y.
-        Threat threat = clearance < 7 ? Threat.LOW_TERRAIN : Threat.NONE;
+        Threat threat = clearance < 7 ? Threat.LOW_TERRAIN
+                : (clearance < 25 && movement.y * 20 < -3 ? Threat.ALTITUDE : Threat.NONE);
         double firstSeconds = Double.NaN;
         boolean allLoaded = true;
 
