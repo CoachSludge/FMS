@@ -43,12 +43,11 @@ public final class WarningAudioController {
         boolean due = changed ? now - lastSoundTime >= TRANSITION_MS : now - lastSoundTime >= REPEAT_MS;
         if (urgent || due) {
             // Master tones on warning transitions; repeats play the named callout only.
-            boolean shouldTone = changed && HudSettings.warningTones;
-            if (shouldTone) {
-                String selectedTone = alert.severity() == FlightWarnings.Severity.CRITICAL
-                        ? HudSettings.criticalTone : HudSettings.cautionTone;
-                FmsSounds.previewName(selectedTone);
-            }
+            String selectedTone = alert.severity() == FlightWarnings.Severity.CRITICAL
+                    ? HudSettings.criticalTone
+                    : isElevatedCaution(alert.message()) ? "mastercaution" : HudSettings.cautionTone;
+            boolean shouldTone = changed && HudSettings.warningTones && FmsSounds.resolve(selectedTone) != null;
+            if (shouldTone) FmsSounds.previewName(selectedTone);
             if (urgent || !shouldTone) {
                 // Critical flight danger must not wait for a tone to finish.
                 FmsSounds.play(soundFor(alert));
@@ -60,6 +59,11 @@ public final class WarningAudioController {
             lastSoundTime = now;
         }
         lastMessage = alert.message();
+    }
+
+    private static boolean isElevatedCaution(String message) {
+        return "LOW ELYTRA".equals(message) || "TERRAIN AHEAD".equals(message)
+                || "LOW TERRAIN".equals(message);
     }
 
     private static void reset() {
