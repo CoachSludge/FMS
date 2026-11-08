@@ -25,6 +25,15 @@ public final class FmsHud {
     public static void render(GuiGraphicsExtractor g, DeltaTracker tick) {
         Minecraft mc = Minecraft.getInstance();
         if (!HudSettings.enabled || mc.player == null || mc.gui.hud.isHidden()) return;
+        switch (HudSettings.hudMode) {
+            case ELYTRA_EQUIPPED -> {
+                if (!mc.player.getItemBySlot(EquipmentSlot.CHEST).is(Items.ELYTRA)) return;
+            }
+            case ONLY_FLYING -> {
+                if (!mc.player.isFallFlying()) return;
+            }
+            case ALWAYS -> { }
+        }
         if (HudSettings.style != HudSettings.Style.BOXED) {
             FmsAviationHud.render(g, HudSettings.style == HudSettings.Style.HYBRID);
             return;
