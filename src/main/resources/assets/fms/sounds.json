@@ -1,0 +1,32 @@
+{
+  "bingo": {
+    "sounds": [
+      "fms:warnings/bingo"
+    ]
+  },
+  "warning": {
+    "sounds": [
+      "fms:warnings/warning"
+    ]
+  },
+  "caution": {
+    "sounds": [
+      "fms:warnings/caution"
+    ]
+  },
+  "pullup": {
+    "sounds": [
+      "fms:warnings/pullup"
+    ]
+  },
+  "altitude": {
+    "sounds": [
+      "fms:warnings/altitude"
+    ]
+  },
+  "mastercaution": {
+    "sounds": [
+      "fms:warnings/mastercaution"
+    ]
+  }
+}
