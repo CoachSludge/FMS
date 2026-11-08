@@ -86,6 +86,8 @@ public final class FmsSettingsScreen extends Screen {
             drawButton(g, x + 122, rowY, 112, HudSettings.alertSound[i]);
             drawButton(g, x + 240, rowY, 52, "TEST");
         }
+        g.text(font, "One alert at a time - no tone/voice overlay.", x + 9, y + 150, MUTED, false);
+        g.text(font, "Beep clips can be assigned to any alert.", x + 9, y + 164, MUTED, false);
     }
 
     private void renderTerrainPage(GuiGraphicsExtractor g, int x, int y) {
