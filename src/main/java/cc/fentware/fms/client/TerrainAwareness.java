@@ -23,7 +23,7 @@ public final class TerrainAwareness {
 
     public static Reading current() {
         Minecraft mc = Minecraft.getInstance();
-        if (mc.player == null || mc.level == null || !mc.player.isFallFlying()) {
+        if (!HudSettings.terrainWarnings || mc.player == null || mc.level == null || !mc.player.isFallFlying()) {
             cached = Reading.unknown();
             return cached;
         }
