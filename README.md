@@ -247,3 +247,9 @@ With **Xaero's World Map** installed, opening its fullscreen map now shows a com
 Toggle with `/fms map on` or `/fms map off`. The panel is on by default; it is also hidden when cruise guidance is turned off. All toggles persist to `config/fms-hud.properties`.
 
 This is **display integration** using the Fabric `ScreenEvents.afterExtract` callback and detects Xaero's fullscreen map screen by name only when `xaeroworldmap` is installed. It does not modify Xaero classes or input. **Clicking a point on the map does not yet set the FMS destination**; save/select a Xaero waypoint via the existing FMS commands. Not compiled or verified in the game client here. If the panel does not appear, check Xaero's current fullscreen GUI class name and report the Minecraft log.
+
+## Vanilla HUD safe area (Survival friendly)
+
+FMS now avoids occupying the bottom of the game screen where vanilla draws its hotbar, XP, hearts, armor, hunger, air, and mount-related status. Boxed flight/navigation panels are vertically clamped after optional Xaero minimap avoidance; the HUD editor also prevents dragging them into this reserve. Aviation and Hybrid layouts now put destination/cruise information in compact side readouts instead of stacking it beneath the center instruments, and only draw footer labels that fit **above** the vanilla reserve.
+
+A conservative **78 GUI-pixel bottom margin** is used without Creative-style instant build abilities, and **42 pixels** in Creative. Vanilla GUI scale and mods that relocate default UI elements can change the required amount. This is a layout reserve, not a way to hide or alter vanilla UI. On unusually small windows, FMS may suppress lower-priority details rather than drawing over vanilla status bars. This update has not yet been locally compiled or visually tested at multiple GUI scales.
