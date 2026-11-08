@@ -61,7 +61,7 @@ public final class FmsSounds {
     }
 
     public static void play(SoundEvent sound) {
-        if (!HudSettings.audioEnabled || HudSettings.audioVolume <= 0) return;
+        if (sound == null || !HudSettings.audioEnabled || HudSettings.audioVolume <= 0) return;
         Minecraft.getInstance().getSoundManager().play(
                 SimpleSoundInstance.forUI(sound, 1.0F, HudSettings.audioVolume / 100.0F));
     }
