@@ -21,6 +21,7 @@ public final class FmsClient implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
         HudSettings.load();
+        FmsCommands.register();
         KeyMapping.Category category = KeyMapping.Category.register(Identifier.fromNamespaceAndPath("fms", "flight"));
         KeyMapping toggle = KeyMappingHelper.registerKeyMapping(new KeyMapping(
                 "key.fms.toggle", InputConstants.Type.KEYBOARD, InputConstants.KEY_H, category));
