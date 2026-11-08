@@ -38,6 +38,7 @@ public final class HudSettings {
     public static int color = 0xFF72F3A4;
     public static int unknownCruiseY = 250;
     public static boolean cruiseGuidance = true;
+    public static boolean mapFlightPanel = true;
     public static int cruiseClearance = 40;
     public static int cruiseOverrideY = -1;
     /** Assumed distance per rocket, deliberately conservative and player-tunable. */
@@ -53,6 +54,7 @@ public final class HudSettings {
             p.load(in);
             enabled = Boolean.parseBoolean(p.getProperty("enabled", "true"));
             cruiseGuidance = Boolean.parseBoolean(p.getProperty("cruiseGuidance", "true"));
+            mapFlightPanel = Boolean.parseBoolean(p.getProperty("mapFlightPanel", "true"));
             cruiseClearance = bounded(p, "cruiseClearance", 40, 10, 100);
             cruiseOverrideY = bounded(p, "cruiseOverrideY", -1, -1, 300);
             blocksPerRocket = bounded(p, "blocksPerRocket", 400, 100, 2000);
@@ -97,6 +99,7 @@ public final class HudSettings {
         Properties p = new Properties();
         p.setProperty("enabled", String.valueOf(enabled));
         p.setProperty("cruiseGuidance", String.valueOf(cruiseGuidance));
+        p.setProperty("mapFlightPanel", String.valueOf(mapFlightPanel));
         p.setProperty("cruiseClearance", String.valueOf(cruiseClearance));
         p.setProperty("cruiseOverrideY", String.valueOf(cruiseOverrideY));
         p.setProperty("blocksPerRocket", String.valueOf(blocksPerRocket));
