@@ -138,3 +138,18 @@ FMS deliberately does **not** execute or decode arbitrary files itself: it packa
 Development client folder: `FMS/run/config/fms/sounds/`. Normal launcher: `.minecraft/config/fms/sounds/`, or the game directory of the user's modpack/profile.
 
 The custom-sounds implementation has been committed but not compiled or verified in-game in this environment.
+
+## Terrain / altitude callouts (local first pass)
+
+FMS now registers the three supplied recordings `lowterrain.ogg`, `terrain.ogg`, and `terrainahead.ogg` and uses existing `pullup.ogg` and `altitude.ogg`. Terrain awareness runs **only during Elytra flight**, sampling Minecraft's **already loaded** chunk heightmaps (MOTION_BLOCKING) at the current X/Z and up to ~48 blocks ahead along the player’s measured velocity. It never loads unseen chunks, and ignores unobserved samples. It predicts a short, straight-line path using current velocity; it is **not** guaranteed collision detection.
+
+Current initial thresholds (tune after in-game flight testing):
+- **ALTITUDE**: <25 blocks above local surface and descending faster than 3 blocks/sec.
+- **LOW TERRAIN**: <7 blocks above local surface.
+- **TERRAIN AHEAD**: projected path comes within 14 blocks of surface in the sampled horizon.
+- **TERRAIN**: projected margin <7 blocks within 1.8 seconds.
+- **PULL UP**: projected margin <3.5 blocks within 1.15 seconds (critical; immediately overrides audio transition delay).
+
+There is a new **AGL** (above ground level) value in the cockpit HUD and a **TERRAIN** settings tab in Mod Menu → FMS → Configure for enabling warnings and changing/testing individual recordings.
+
+**Not yet Xaero terrain-cache integration:** Xaero's Minimap has optional FMS screen-placement compatibility, but FMS does not read Xaero's historical/remote terrain cache. Local Minecraft chunk heightmaps are available without a dependency on Xaero. No guarantees for unloaded terrain, caves, roofs, overhead or lateral obstacles, or sudden velocity changes. The critical warning is advisory and does not control the player. The implementation has not been compiled or validated in-game here; please test on a backup world and report the first Gradle compiler error if any.
