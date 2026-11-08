@@ -52,6 +52,13 @@ public final class FlightWarnings {
             case ALTITUDE -> { return new Alert("ALTITUDE", Severity.CAUTION); }
             default -> { }
         }
+        // Fighter-style master caution beeps for aggressive maneuvers.
+        // These are advisory and never suppress the urgent terrain / wing emergencies above.
+        ManeuverAwareness.Maneuver maneuver = ManeuverAwareness.current();
+        if (maneuver == ManeuverAwareness.Maneuver.STEEP_DIVE)
+            return new Alert("STEEP DIVE", Severity.CAUTION);
+        if (maneuver == ManeuverAwareness.Maneuver.HARD_TURN)
+            return new Alert("HARD TURN", Severity.CAUTION);
         if (percent <= 15)
             return new Alert("LOW ELYTRA", Severity.CAUTION);
         if (percent <= 35)
