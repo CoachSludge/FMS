@@ -1,6 +1,5 @@
 {
   "key.category.fms.flight": "FMS Flight Computer",
   "key.fms.toggle": "Toggle FMS HUD",
-  "key.fms.destination": "Set FMS destination (via chat prompt)",
-  "key.fms.clear": "Clear FMS destination"
+  "key.fms.editor": "Edit FMS HUD layout"
 }
