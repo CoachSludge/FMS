@@ -109,6 +109,11 @@ public final class FmsAviationHud {
 
         int footY = Math.min(h - 22, bottom + 23);
         label(g, String.format(Locale.ROOT, "VS %+05.1f", vertical), cx - 25, footY, vertical < -16 ? AMBER : GREEN);
+        TerrainAwareness.Reading local = TerrainAwareness.current();
+        if (Double.isFinite(local.clearance())) {
+            label(g, String.format(Locale.ROOT, "AGL %.0f", Math.max(0, local.clearance())),
+                    Math.max(4, cx - 100), footY, local.clearance() < 25 ? AMBER : GREEN);
+        }
         label(g, "WING " + durability, Math.max(5, cx - 110), Math.min(h - 12, footY + 13), durability <= 20 ? RED : GREEN);
         label(g, "RKT " + rocketCount, Math.min(w - 48, cx + 65), Math.min(h - 12, footY + 13), rocketCount <= 3 ? AMBER : GREEN);
 
