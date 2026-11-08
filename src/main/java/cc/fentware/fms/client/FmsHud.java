@@ -25,6 +25,10 @@ public final class FmsHud {
     public static void render(GuiGraphicsExtractor g, DeltaTracker tick) {
         Minecraft mc = Minecraft.getInstance();
         if (!HudSettings.enabled || mc.player == null || mc.gui.hud.isHidden()) return;
+        if (HudSettings.style != HudSettings.Style.BOXED) {
+            FmsAviationHud.render(g, HudSettings.style == HudSettings.Style.HYBRID);
+            return;
+        }
         drawInstruments(g, px(HudSettings.instrumentsX, g.guiWidth()), py(HudSettings.instrumentsY, g.guiHeight()));
         drawNavigation(g, px(HudSettings.navigationX, g.guiWidth()), py(HudSettings.navigationY, g.guiHeight()));
         drawWarning(g);
