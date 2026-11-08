@@ -27,7 +27,16 @@ public final class FlightWarnings {
         double horizontalSpeed = Math.hypot(player.getDeltaMovement().x, player.getDeltaMovement().z) * 20.0;
         int rockets = player.getInventory().countItem(Items.FIREWORK_ROCKET);
 
-        // Phase one is deliberately conservative: no false claim of imminent terrain collision.
+        TerrainAwareness.Reading terrain = TerrainAwareness.current();
+        // Only known, loaded terrain. Terrain threats supersede other flight advisories.
+        switch (terrain.threat()) {
+            case PULL_UP -> { return new Alert("PULL UP", Severity.CRITICAL); }
+            case TERRAIN -> { return new Alert("TERRAIN", Severity.CRITICAL); }
+            case TERRAIN_AHEAD -> { return new Alert("TERRAIN AHEAD", Severity.CAUTION); }
+            case LOW_TERRAIN -> { return new Alert("LOW TERRAIN", Severity.CAUTION); }
+            case NONE -> { }
+        }
+        // Flight-state warnings remain available whenever no terrain threat is higher priority.
         if (durability <= 5) return new Alert("CHECK WINGS - CRITICAL", Severity.CRITICAL);
         if (descent > 32 && horizontalSpeed > 15) return new Alert("HIGH SPEED DESCENT", Severity.CRITICAL);
         if (durability <= 20) return new Alert("CHECK WINGS", Severity.CAUTION);
