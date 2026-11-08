@@ -37,6 +37,12 @@ public final class HudSettings {
     public static double navigationX = 0.76, navigationY = 0.12;
     public static int color = 0xFF72F3A4;
     public static int unknownCruiseY = 250;
+    public static boolean cruiseGuidance = true;
+    public static int cruiseClearance = 40;
+    public static int cruiseOverrideY = -1;
+    /** Assumed distance per rocket, deliberately conservative and player-tunable. */
+    public static int blocksPerRocket = 400;
+    public static int rocketReserve = 2;
 
     private HudSettings() {}
 
@@ -46,6 +52,11 @@ public final class HudSettings {
         try (InputStream in = Files.newInputStream(PATH)) {
             p.load(in);
             enabled = Boolean.parseBoolean(p.getProperty("enabled", "true"));
+            cruiseGuidance = Boolean.parseBoolean(p.getProperty("cruiseGuidance", "true"));
+            cruiseClearance = bounded(p, "cruiseClearance", 40, 10, 100);
+            cruiseOverrideY = bounded(p, "cruiseOverrideY", -1, -1, 300);
+            blocksPerRocket = bounded(p, "blocksPerRocket", 400, 100, 2000);
+            rocketReserve = bounded(p, "rocketReserve", 2, 0, 16);
             avoidXaeroMinimap = Boolean.parseBoolean(p.getProperty("avoidXaeroMinimap", "true"));
             try { minimapCorner = MinimapCorner.valueOf(p.getProperty("minimapCorner", "TOP_RIGHT")); }
             catch (IllegalArgumentException ignored) { minimapCorner = MinimapCorner.TOP_RIGHT; }
@@ -72,6 +83,11 @@ public final class HudSettings {
         }
     }
 
+    private static int bounded(Properties p, String key, int fallback, int min, int max) {
+        try { return Math.max(min, Math.min(max, Integer.parseInt(p.getProperty(key, String.valueOf(fallback))))); }
+        catch (NumberFormatException ignored) { return fallback; }
+    }
+
     private static double fraction(Properties p, String key, double fallback) {
         try { return Math.max(0, Math.min(1, Double.parseDouble(p.getProperty(key, String.valueOf(fallback))))); }
         catch (NumberFormatException ignored) { return fallback; }
@@ -80,6 +96,11 @@ public final class HudSettings {
     public static void save() {
         Properties p = new Properties();
         p.setProperty("enabled", String.valueOf(enabled));
+        p.setProperty("cruiseGuidance", String.valueOf(cruiseGuidance));
+        p.setProperty("cruiseClearance", String.valueOf(cruiseClearance));
+        p.setProperty("cruiseOverrideY", String.valueOf(cruiseOverrideY));
+        p.setProperty("blocksPerRocket", String.valueOf(blocksPerRocket));
+        p.setProperty("rocketReserve", String.valueOf(rocketReserve));
         p.setProperty("avoidXaeroMinimap", String.valueOf(avoidXaeroMinimap));
         p.setProperty("minimapCorner", minimapCorner.name());
         p.setProperty("hudMode", hudMode.name());
