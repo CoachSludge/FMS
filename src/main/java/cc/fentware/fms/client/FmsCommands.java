@@ -56,7 +56,7 @@ public final class FmsCommands {
                                 // User explicitly selects a displayed world/dimension entry.
                                 // Xaero files can contain points from other saves; be sure to
                                 // select from the current world and matching dimension.
-                                FmsClient.setDestination(p.x(), p.z());
+                                FmsClient.setDestination(p.x(), p.z(), p.name());
                                 tell("[FMS] Flight destination: " + p.name() + " at X " + p.x()
                                         + " Z " + p.z() + ". Verify world/dimension: "
                                         + p.world() + " / " + p.dimension());
