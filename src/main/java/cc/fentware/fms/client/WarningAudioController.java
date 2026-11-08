@@ -77,6 +77,8 @@ public final class WarningAudioController {
             case "TERRAIN AHEAD" -> 65;
             case "LOW TERRAIN" -> 60;
             case "LOW ELYTRA" -> 55;
+            case "STEEP DIVE" -> 54;
+            case "HARD TURN" -> 48;
             case "ALTITUDE" -> 50;
             case "ELYTRA HEALTH" -> 40;
             case "SINK RATE" -> 35;
@@ -111,6 +113,8 @@ public final class WarningAudioController {
             case "LOW ELYTRA" -> 11;
             case "LAND SOON" -> 12;
             case "LAND NOW" -> 13;
+            case "HARD TURN" -> 14;
+            case "STEEP DIVE" -> 15;
             default -> 1;
         };
         return FmsSounds.resolve(HudSettings.alertSound[index]);
