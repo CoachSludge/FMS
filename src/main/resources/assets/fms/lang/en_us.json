@@ -1,5 +1,6 @@
 {
   "key.category.fms.flight": "FMS Flight Computer",
   "key.fms.toggle": "Toggle FMS HUD",
-  "key.fms.editor": "Edit FMS HUD layout"
+  "key.fms.editor": "Edit FMS HUD layout",
+  "key.fms.style": "Cycle FMS HUD style (Boxed / Aviation / Hybrid)"
 }
