@@ -133,12 +133,26 @@ public final class FmsAviationHud {
             if (destinationLabel.length() > 22) destinationLabel = destinationLabel.substring(0, 21) + "~";
             label(g, "TO " + destinationLabel, Math.max(4, cx - 65),
                     Math.min(h - 10, footY + 40), AMBER);
+            if (HudSettings.cruiseGuidance) {
+                CruiseGuidance.Guidance plan = CruiseGuidance.current();
+                if (plan != null) {
+                    String correction = Math.abs(plan.headingError()) < 5 ? "ON HDG"
+                            : plan.headingError() > 0 ? "TURN R " + Math.round(plan.headingError())
+                            : "TURN L " + Math.round(-plan.headingError());
+                    label(g, "CRZ Y " + plan.recommendedY() + " " + plan.altitudeAdvice() + "  " + correction,
+                            Math.max(4, cx - 95), Math.min(h - 10, footY + 53), AMBER);
+                    label(g, "RKT ~" + plan.fuel().totalRockets() + " / " + plan.fuel().availableRockets()
+                                    + (plan.completeSurvey() ? " LOCAL" : " UNKNOWN ROUTE"),
+                            Math.max(4, cx - 92), Math.min(h - 10, footY + 66),
+                            plan.fuel().sufficient() ? GREEN : AMBER);
+                }
+            }
         } else {
             label(g, "NAV NO DEST", cx - 35, Math.min(h - 10, footY + 27), AMBER);
         }
 
-        if (hybrid) {
-            label(g, "UNKNOWN TERRAIN  Y " + HudSettings.unknownCruiseY, Math.max(4, cx - 85),
+        if (hybrid && !FmsClient.hasDestination()) {
+            label(g, "UNSURVEYED TERRAIN  Y " + HudSettings.unknownCruiseY, Math.max(4, cx - 85),
                     Math.min(h - 10, footY + 53), AMBER);
         }
         // Phase 1 has no terrain survey: do not present altitude guidance as confirmed safe.
