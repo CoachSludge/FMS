@@ -11,12 +11,29 @@ import net.minecraft.resources.Identifier;
 /** Fabric 26.3 entrypoint. All game-facing code stays in this package. */
 public final class FmsClient implements ClientModInitializer {
     private static Double destinationX, destinationZ;
+    private static String destinationName = "";
+    private static Object destinationWorld;
 
-    public static boolean hasDestination() { return destinationX != null && destinationZ != null; }
+    public static boolean hasDestination() {
+        return destinationX != null && destinationZ != null
+                && destinationWorld == net.minecraft.client.Minecraft.getInstance().level;
+    }
+    public static String destName() { return destinationName; }
     public static double destX() { return destinationX; }
     public static double destZ() { return destinationZ; }
-    public static void setDestination(double x, double z) { destinationX = x; destinationZ = z; }
-    public static void clearDestination() { destinationX = null; destinationZ = null; }
+    public static void setDestination(double x, double z) { setDestination(x, z, "CUSTOM"); }
+    public static void setDestination(double x, double z, String name) {
+        destinationX = x;
+        destinationZ = z;
+        destinationName = name == null ? "DEST" : name;
+        destinationWorld = net.minecraft.client.Minecraft.getInstance().level;
+    }
+    public static void clearDestination() {
+        destinationX = null;
+        destinationZ = null;
+        destinationName = "";
+        destinationWorld = null;
+    }
 
     @Override
     public void onInitializeClient() {
