@@ -56,7 +56,7 @@ public final class CruiseGuidance {
         var fuel = CruiseMath.estimateRockets(dist, HudSettings.blocksPerRocket,
                 HudSettings.rocketReserve, rockets);
         double bearing = CruiseMath.bearingDegrees(x, z, FmsClient.destX(), FmsClient.destZ());
-        double error = CruiseMath.headingError((mc.player.getYRot() + 180 + 360) % 360, bearing);
+        double error = CruiseMath.headingError(mc.player.getYRot(), bearing);
         cached = new Guidance(dist, bearing, error, suggested, complete, fuel,
                 CruiseMath.altitudeAdvice(mc.player.getY(), suggested));
         return cached;
