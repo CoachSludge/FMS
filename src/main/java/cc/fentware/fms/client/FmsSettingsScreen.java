@@ -39,13 +39,15 @@ public final class FmsSettingsScreen extends Screen {
         g.fill(x, y, x + WIDTH, y + 2, GREEN);
         g.text(font, "FMS / SETTINGS", x + 9, y + 7, GREEN, true);
         drawButton(g, x + 238, y + 5, 54, "DONE");
-        drawButton(g, x + 8, y + 24, 90, "HUD" + (page == 0 ? "*" : ""));
-        drawButton(g, x + 105, y + 24, 90, "AUDIO" + (page == 1 ? "*" : ""));
-        drawButton(g, x + 202, y + 24, 90, "TERRAIN" + (page == 2 ? "*" : ""));
+        drawButton(g, x + 8, y + 24, 66, "HUD" + (page == 0 ? "*" : ""));
+        drawButton(g, x + 79, y + 24, 66, "AUDIO" + (page == 1 ? "*" : ""));
+        drawButton(g, x + 150, y + 24, 66, "TERRAIN" + (page == 2 ? "*" : ""));
 
+        drawButton(g, x + 221, y + 24, 71, "WINGS" + (page == 3 ? "*" : ""));
         if (page == 0) renderHudPage(g, x, y);
         else if (page == 1) renderAudioPage(g, x, y);
-        else renderTerrainPage(g, x, y);
+        else if (page == 2) renderTerrainPage(g, x, y);
+        else renderWingsPage(g, x, y);
 
         g.fill(x + 8, y + 181, x + WIDTH - 8, y + 182, 0xFF396B52);
         if (page != 0) {
@@ -98,6 +100,19 @@ public final class FmsSettingsScreen extends Screen {
         g.text(font, "Loaded chunks only - terrain beyond view is unknown.", x + 9, y + 173, MUTED, false);
     }
 
+    private void renderWingsPage(GuiGraphicsExtractor g, int x, int y) {
+        g.text(font, "ELYTRA ALERT", x + 9, y + 50, MUTED, false);
+        g.text(font, "SOUND", x + 125, y + 50, MUTED, false);
+        String[] labels = {"ELYTRA HEALTH", "LOW ELYTRA", "LAND SOON", "LAND NOW"};
+        for (int i = 0; i < labels.length; i++) {
+            int rowY = y + 63 + i * 24;
+            g.text(font, labels[i], x + 9, rowY + 5, WHITE, false);
+            drawButton(g, x + 122, rowY, 112, HudSettings.alertSound[10 + i]);
+            drawButton(g, x + 240, rowY, 52, "TEST");
+        }
+        g.text(font, "LAND NOW: critical wings, or low wings + bingo", x + 9, y + 165, MUTED, false);
+    }
+
     private void drawButton(GuiGraphicsExtractor g, int x, int y, int w, String label) {
         g.fill(x, y, x + w, y + 17, 0xDD1D3D30);
         g.fill(x, y + 16, x + w, y + 17, 0xFF396B52);
@@ -113,9 +128,10 @@ public final class FmsSettingsScreen extends Screen {
         double mx = event.x(), my = event.y();
         int x = originX(), y = originY();
 
-        if (hit(mx, my, x + 8, y + 24, 90)) { page = 0; return true; }
-        if (hit(mx, my, x + 105, y + 24, 90)) { page = 1; return true; }
-        if (hit(mx, my, x + 202, y + 24, 90)) { page = 2; return true; }
+        if (hit(mx, my, x + 8, y + 24, 66)) { page = 0; return true; }
+        if (hit(mx, my, x + 79, y + 24, 66)) { page = 1; return true; }
+        if (hit(mx, my, x + 150, y + 24, 66)) { page = 2; return true; }
+        if (hit(mx, my, x + 221, y + 24, 71)) { page = 3; return true; }
         if (hit(mx, my, x + 238, y + 5, 54)) { onClose(); return true; }
         if (page != 0 && hit(mx, my, x + 8, y + 186, 111)) {
             try {
@@ -167,12 +183,12 @@ public final class FmsSettingsScreen extends Screen {
                 }
                 return super.mouseClicked(event, doubleClick);
             }
-        } else {
+        } else if (page == 2) {
             if (hit(mx, my, x + 8, y + 47, 284)) {
                 HudSettings.terrainWarnings = !HudSettings.terrainWarnings;
             } else {
                 for (int i = 0; i < 5; i++) {
-                    int rowY = y + 76 + i * 23;
+                    int rowY = y + 74 + i * 19;
                     if (hit(mx, my, x + 122, rowY, 112)) {
                         HudSettings.alertSound[5 + i] = FmsSounds.nextName(HudSettings.alertSound[5 + i]);
                         HudSettings.save();
@@ -185,6 +201,20 @@ public final class FmsSettingsScreen extends Screen {
                 }
                 return super.mouseClicked(event, doubleClick);
             }
+        } else {
+            for (int i = 0; i < 4; i++) {
+                int rowY = y + 63 + i * 24;
+                if (hit(mx, my, x + 122, rowY, 112)) {
+                    HudSettings.alertSound[10 + i] = FmsSounds.nextName(HudSettings.alertSound[10 + i]);
+                    HudSettings.save();
+                    return true;
+                }
+                if (hit(mx, my, x + 240, rowY, 52)) {
+                    FmsSounds.previewName(HudSettings.alertSound[10 + i]);
+                    return true;
+                }
+            }
+            return super.mouseClicked(event, doubleClick);
         }
         HudSettings.save();
         return true;
