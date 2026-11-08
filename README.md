@@ -232,3 +232,18 @@ Once you set a destination with `/fms go X Z` or `/fms xaero select N`, FMS now 
 - `/fms cruise status` — print destination heading, turning correction, Y target and approximate fuel budget.
 
 Headings use Minecraft's actual yaw convention. The flight director does not activate until a destination is selected and can be disabled without disabling the ordinary FMS warnings. The implementation is committed to main but has not been locally compiled or in-game tested here.
+
+## FMS panel inside Xaero's World Map
+
+With **Xaero's World Map** installed, opening its fullscreen map now shows a compact **FMS / FLIGHT PLAN** information panel (upper-right, unless Xaero's menu design changes). It displays:
+
+- **YOU:** live X/Y/Z player position.
+- **TO:** currently selected FMS waypoint name and destination X/Z (from `/fms xaero select N` or `/fms go X Z`).
+- **DIST / HDG:** remaining straight-line horizontal distance and target bearing.
+- **CRUISE Y:** recommended cruise altitude and CLIMB/LEVEL/DESCEND advisory.
+- **ROCKETS:** estimated total rockets required (including reserve) versus rockets carried.
+- **TERRAIN:** survey is only local sampled loaded chunks; distant routes are not confirmed safe.
+
+Toggle with `/fms map on` or `/fms map off`. The panel is on by default; it is also hidden when cruise guidance is turned off. All toggles persist to `config/fms-hud.properties`.
+
+This is **display integration** using the Fabric `ScreenEvents.afterExtract` callback and detects Xaero's fullscreen map screen by name only when `xaeroworldmap` is installed. It does not modify Xaero classes or input. **Clicking a point on the map does not yet set the FMS destination**; save/select a Xaero waypoint via the existing FMS commands. Not compiled or verified in the game client here. If the panel does not appear, check Xaero's current fullscreen GUI class name and report the Minecraft log.
