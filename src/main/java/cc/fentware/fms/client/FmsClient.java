@@ -28,7 +28,11 @@ public final class FmsClient implements ClientModInitializer {
         KeyMapping edit = KeyMappingHelper.registerKeyMapping(new KeyMapping(
                 "key.fms.editor", InputConstants.Type.KEYBOARD, InputConstants.KEY_J, category));
 
+        KeyMapping style = KeyMappingHelper.registerKeyMapping(new KeyMapping(
+                "key.fms.style", InputConstants.Type.KEYBOARD, InputConstants.KEY_K, category));
+
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
+            while (style.consumeClick()) HudSettings.cycleStyle();
             while (toggle.consumeClick()) { HudSettings.enabled = !HudSettings.enabled; HudSettings.save(); }
             while (edit.consumeClick()) {
                 if (client.player != null) client.gui.setScreen(new HudEditorScreen());
