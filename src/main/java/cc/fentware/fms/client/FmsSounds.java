@@ -16,7 +16,38 @@ public final class FmsSounds {
     public static final SoundEvent ALTITUDE = register("altitude");
     public static final SoundEvent MASTER_CAUTION = register("mastercaution");
 
+    public static final String[] NAMES = {"bingo", "warning", "caution", "pullup", "altitude", "mastercaution", "off"};
+
     private FmsSounds() {}
+
+    public static boolean validName(String name) {
+        for (String value : NAMES) if (value.equals(name)) return true;
+        return false;
+    }
+
+    public static String nextName(String name) {
+        for (int i = 0; i < NAMES.length; i++) {
+            if (NAMES[i].equals(name)) return NAMES[(i + 1) % NAMES.length];
+        }
+        return NAMES[0];
+    }
+
+    public static SoundEvent resolve(String name) {
+        return switch (name) {
+            case "bingo" -> BINGO;
+            case "warning" -> WARNING;
+            case "caution" -> CAUTION;
+            case "pullup" -> PULLUP;
+            case "altitude" -> ALTITUDE;
+            case "mastercaution" -> MASTER_CAUTION;
+            default -> null;
+        };
+    }
+
+    public static void previewName(String name) {
+        SoundEvent event = resolve(name);
+        if (event != null) play(event);
+    }
 
     private static SoundEvent register(String name) {
         Identifier id = Identifier.fromNamespaceAndPath("fms", name);
