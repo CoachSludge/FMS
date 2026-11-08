@@ -36,3 +36,20 @@ bash scripts/test-core.sh
 5. Route sampling, flight profile, forward-impact prediction, warnings, original audio assets.
 
 **Not an autopilot:** FMS gives flight guidance; it does not steer or automate flight.
+
+
+## HUD alpha (Fabric 26.3)
+
+The first on-screen HUD implementation lives in `cc.fentware.fms.client`.
+
+- **H** toggles the complete flight HUD.
+- **J** opens the HUD layout editor; drag the flight and navigation panels, then press Escape to save.
+- **/fms go <x> <z>** sets a temporary waypoint (client-side only).
+- **/fms clear** removes that waypoint.
+- Layout is persisted to `config/fms-hud.properties`; waypoints are session-only.
+- HUD shows live airspeed (blocks/s), Y altitude, vertical speed, heading, Elytra remaining durability, inventory firework rockets, X/Z position, distance and simple speed-based ETA.
+- The displayed unknown-terrain Y=250 is a **configuration recommendation**, not a scanned terrain clearance. Xaero integration and predicted collision detection are not active yet.
+
+Build requirements: **JDK 25**, **Gradle 9.7.1**, Minecraft **26.3**, Fabric Loader **0.19.5**, Fabric API **0.161.0+26.3**. From the repository root use `gradle build` (a Gradle wrapper JAR is not yet checked in). GitHub Actions also attempts a build on pushes and uploads a development JAR when successful.
+
+**Verification:** Java core smoke tests have passed previously. The Fabric client and HUD have not yet been compiled or launched in a Minecraft client here. Check the GitHub Actions build result before installing; any API incompatibilities will need corrections.
