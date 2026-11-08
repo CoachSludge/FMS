@@ -22,6 +22,15 @@ public final class FlightPlannerSmokeTest {
         check(WarningLogic.evaluate(new WarningLogic.Inputs(true, 1.5, 100, 25, 6)) == WarningLogic.Warning.PULL_UP, "impact priority");
         check(WarningLogic.evaluate(new WarningLogic.Inputs(true, Double.NaN, 100, 25, 6)) == WarningLogic.Warning.TERRAIN_UNKNOWN, "unknown alert");
         check(Double.isNaN(FlightPlanner.etaSeconds(100, 0)), "stationary ETA");
+        var rockets = CruiseMath.estimateRockets(1250, 400, 2, 6);
+        check(rockets.travelRockets() == 4 && rockets.totalRockets() == 6, "rocket budget");
+        check(rockets.sufficient(), "fuel adequate");
+        check(!CruiseMath.estimateRockets(1250, 400, 2, 5).sufficient(), "fuel shortfall");
+        check(CruiseMath.altitudeAdvice(100, 140).equals("CLIMB"), "climb");
+        check(CruiseMath.altitudeAdvice(151, 140).equals("DESCEND"), "descend");
+        check(CruiseMath.altitudeAdvice(140, 140).equals("LEVEL"), "level");
+        check(Math.abs(CruiseMath.bearingDegrees(0, 0, 100, 0) - 270) < 0.001, "eastward Minecraft yaw");
+        check(Math.abs(CruiseMath.headingError(170, -170) - 20) < 0.001, "wrap heading");
         System.out.println("FMS core smoke tests passed");
     }
     private static void check(boolean ok, String message) {
