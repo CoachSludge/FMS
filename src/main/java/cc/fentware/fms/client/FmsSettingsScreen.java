@@ -18,7 +18,7 @@ public final class FmsSettingsScreen extends Screen {
     private static final int WIDTH = 300;
     private static final int HEIGHT = 208;
     private static final String[] LABELS = {
-        "BINGO FUEL", "SINK RATE", "HIGH SPEED DESCENT", "CAUTION TONE", "WARNING TONE"
+        "BINGO FUEL", "SINK RATE", "HIGH SPEED DESCENT"
     };
     private final Screen parent;
     private int page = 1; // Audio is the initial tab.
@@ -78,14 +78,12 @@ public final class FmsSettingsScreen extends Screen {
         drawButton(g, x + 242, y + 47, 50, "VOL +");
         g.text(font, "WARNING TYPE", x + 9, y + 72, MUTED, false);
         g.text(font, "ASSIGNED SOUND", x + 125, y + 72, MUTED, false);
-        drawButton(g, x + 225, y + 67, 67, HudSettings.warningTones ? "TONES ON" : "TONES OFF");
+
 
         for (int i = 0; i < LABELS.length; i++) {
             int rowY = y + 84 + i * 19;
             g.text(font, LABELS[i], x + 9, rowY + 5, WHITE, false);
-            String sound = i == 3 ? HudSettings.cautionTone
-                    : i == 4 ? HudSettings.criticalTone : HudSettings.alertSound[i];
-            drawButton(g, x + 122, rowY, 112, sound);
+            drawButton(g, x + 122, rowY, 112, HudSettings.alertSound[i]);
             drawButton(g, x + 240, rowY, 52, "TEST");
         }
     }
@@ -165,9 +163,7 @@ public final class FmsSettingsScreen extends Screen {
                 HudSettings.minimapCorner = corners[(HudSettings.minimapCorner.ordinal() + 1) % corners.length];
             } else return super.mouseClicked(event, doubleClick);
         } else if (page == 1) {
-            if (hit(mx, my, x + 225, y + 67, 67)) {
-                HudSettings.warningTones = !HudSettings.warningTones;
-            } else if (hit(mx, my, x + 8, y + 47, 110)) {
+            if (hit(mx, my, x + 8, y + 47, 110)) {
                 HudSettings.audioEnabled = !HudSettings.audioEnabled;
             } else if (hit(mx, my, x + 126, y + 47, 45)) {
                 HudSettings.audioVolume = Math.max(0, HudSettings.audioVolume - 10);
@@ -177,15 +173,12 @@ public final class FmsSettingsScreen extends Screen {
                 for (int i = 0; i < LABELS.length; i++) {
                     int rowY = y + 84 + i * 19;
                     if (hit(mx, my, x + 122, rowY, 112)) {
-                        if (i == 3) HudSettings.cautionTone = FmsSounds.nextName(HudSettings.cautionTone);
-                        else if (i == 4) HudSettings.criticalTone = FmsSounds.nextName(HudSettings.criticalTone);
-                        else HudSettings.alertSound[i] = FmsSounds.nextName(HudSettings.alertSound[i]);
+                        HudSettings.alertSound[i] = FmsSounds.nextName(HudSettings.alertSound[i]);
                         HudSettings.save();
                         return true;
                     }
                     if (hit(mx, my, x + 240, rowY, 52)) {
-                        FmsSounds.previewName(i == 3 ? HudSettings.cautionTone
-                                : i == 4 ? HudSettings.criticalTone : HudSettings.alertSound[i]);
+                        FmsSounds.previewName(HudSettings.alertSound[i]);
                         return true;
                     }
                 }
