@@ -15,13 +15,16 @@ public final class FmsSounds {
     public static final SoundEvent PULLUP = register("pullup");
     public static final SoundEvent ALTITUDE = register("altitude");
     public static final SoundEvent MASTER_CAUTION = register("mastercaution");
+    public static final SoundEvent LOW_TERRAIN = register("lowterrain");
+    public static final SoundEvent TERRAIN = register("terrain");
+    public static final SoundEvent TERRAIN_AHEAD = register("terrainahead");
 
     private static final SoundEvent[] CUSTOM = new SoundEvent[CustomSounds.MAX_SOUNDS];
     static {
         for (int i = 0; i < CUSTOM.length; i++) CUSTOM[i] = registerCustom(CustomSounds.slotId(i));
     }
 
-    public static final String[] NAMES = {"bingo", "warning", "caution", "pullup", "altitude", "mastercaution", "off"};
+    public static final String[] NAMES = {"bingo", "warning", "caution", "pullup", "altitude", "mastercaution", "lowterrain", "terrain", "terrainahead", "off"};
 
     private FmsSounds() {}
 
@@ -43,6 +46,9 @@ public final class FmsSounds {
             case "pullup" -> PULLUP;
             case "altitude" -> ALTITUDE;
             case "mastercaution" -> MASTER_CAUTION;
+            case "lowterrain" -> LOW_TERRAIN;
+            case "terrain" -> TERRAIN;
+            case "terrainahead" -> TERRAIN_AHEAD;
             default -> null;
         };
     }
