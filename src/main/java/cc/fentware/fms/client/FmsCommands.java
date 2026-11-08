@@ -2,6 +2,7 @@ package cc.fentware.fms.client;
 
 import com.mojang.brigadier.arguments.DoubleArgumentType;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
+import cc.fentware.fms.core.CruiseMath;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
@@ -62,6 +63,64 @@ public final class FmsCommands {
                                         + p.world() + " / " + p.dimension());
                                 return 1;
                             }))))
+                .then(literal("cruise")
+                    .then(literal("on").executes(context -> {
+                        HudSettings.cruiseGuidance = true;
+                        HudSettings.save();
+                        tell("[FMS] Cruise flight director ON (advisory only).");
+                        return 1;
+                    }))
+                    .then(literal("off").executes(context -> {
+                        HudSettings.cruiseGuidance = false;
+                        HudSettings.save();
+                        tell("[FMS] Cruise flight director OFF.");
+                        return 1;
+                    }))
+                    .then(literal("auto").executes(context -> {
+                        HudSettings.cruiseOverrideY = -1;
+                        HudSettings.save();
+                        tell("[FMS] Cruise Y set to terrain-advisory estimate.");
+                        return 1;
+                    }))
+                    .then(literal("y")
+                        .then(argument("altitude", IntegerArgumentType.integer(64, 300))
+                            .executes(context -> {
+                                HudSettings.cruiseOverrideY = IntegerArgumentType.getInteger(context, "altitude");
+                                HudSettings.save();
+                                tell("[FMS] Cruise Y override: " + HudSettings.cruiseOverrideY);
+                                return 1;
+                            })))
+                    .then(literal("reach")
+                        .then(argument("blocksPerRocket", IntegerArgumentType.integer(100, 2000))
+                            .executes(context -> {
+                                HudSettings.blocksPerRocket = IntegerArgumentType.getInteger(context, "blocksPerRocket");
+                                HudSettings.save();
+                                tell("[FMS] Estimated range: " + HudSettings.blocksPerRocket + " blocks/rocket (assumption).");
+                                return 1;
+                            })))
+                    .then(literal("reserve")
+                        .then(argument("rockets", IntegerArgumentType.integer(0, 16))
+                            .executes(context -> {
+                                HudSettings.rocketReserve = IntegerArgumentType.getInteger(context, "rockets");
+                                HudSettings.save();
+                                tell("[FMS] Rocket reserve set: " + HudSettings.rocketReserve);
+                                return 1;
+                            })))
+                    .then(literal("status").executes(context -> {
+                        CruiseGuidance.Guidance g = CruiseGuidance.current();
+                        if (g == null) {
+                            tell("[FMS] Set a destination with /fms go X Z first.");
+                        } else {
+                            tell("[FMS] CRZ Y " + g.recommendedY() + " (" + g.altitudeAdvice()
+                                    + "), heading " + Math.round(g.bearing())
+                                    + ", turn " + Math.round(g.headingError())
+                                    + ", rockets approx " + g.fuel().totalRockets() + " ("
+                                    + g.fuel().travelRockets() + " + " + g.fuel().reserveRockets()
+                                    + " reserve), carried " + g.fuel().availableRockets()
+                                    + ", route survey " + (g.completeSurvey() ? "sampled" : "INCOMPLETE"));
+                        }
+                        return 1;
+                    })))
                 .then(literal("clear").executes(context -> {
                     FmsClient.clearDestination();
                     if (Minecraft.getInstance().player != null) {
