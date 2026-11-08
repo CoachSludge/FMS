@@ -105,3 +105,12 @@ The menu selects from the six bundled sound event IDs; it does **not** import ar
 The first pass has **no Xaero terrain detection**, no actual ground-proximity or pull-up activation, and no autopilot. `pullup` and `altitude` can be previewed or assigned to an existing alert as a substitute tone, but are not separate detected events yet.
 
 Changes are pushed directly to `main`. They have not been compiled or in-game verified in this environment: run `gradle clean build` and `gradle runClient` locally.
+
+
+## Mod Menu integration (optional)
+
+FMS implements the Mod Menu `modmenu` entrypoint and provides a config screen factory. With [Mod Menu](https://modrinth.com/mod/modmenu) installed on Fabric 26.3, open **Mods → FMS → Configure** to launch the same sound/HUD settings screen available via **O** in-game. Closing returns to the previous Mod Menu screen.
+
+The Gradle development runtime includes Mod Menu `21.0.0` from Terraformers Maven for testing. End users are not required to install Mod Menu: FMS still works independently with its **O** shortcut. If you package a JAR, do not distribute Mod Menu inside it.
+
+Test: `gradle clean build` and `gradle runClient`. Check the Mods list and configure action on the title screen; verify that the in-game shortcut still works without Mod Menu. The new integration has not been locally compiled or launch-tested here.
