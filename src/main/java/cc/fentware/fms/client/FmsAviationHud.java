@@ -139,7 +139,7 @@ public final class FmsAviationHud {
 
         if (hybrid) {
             label(g, "UNKNOWN TERRAIN  Y " + HudSettings.unknownCruiseY, Math.max(4, cx - 85),
-                    Math.min(h - 10, footY + 40), AMBER);
+                    Math.min(h - 10, footY + 53), AMBER);
         }
         // Phase 1 has no terrain survey: do not present altitude guidance as confirmed safe.
         FlightWarnings.Alert alert = FlightWarnings.current();
