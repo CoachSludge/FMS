@@ -87,3 +87,21 @@ The warning system plays one selected alert at a time, on changes (minimum 1.2 s
 - Playback is client-side, independent of the HUD visibility toggle. Test with your Minecraft master/UI audio levels enabled.
 
 Audio integration is source-committed but **not yet compiled or playtested** after this change. Run `gradle clean build` followed by `gradle runClient`. Redistribution rights for uploaded audio remain the responsibility of the project.
+
+## FMS in-game settings (phase-one implementation)
+
+Press **O** while in a world to open the new FMS settings screen:
+
+- **HUD MODE** cycles `ALWAYS`, `ELYTRA_EQUIPPED` (default), and `ONLY_FLYING`. Equip an Elytra in the chest slot to reveal FMS when in the default mode; removing it hides the HUD. **H** remains the global HUD enable/disable toggle.
+- **STYLE** cycles boxed, aviation, and hybrid.
+- **AUDIO** enables/disables warning audio, with **VOL -** / **VOL +** stepping the FMS audio volume by 10%.
+- Each of the five active warnings has a selectable stock sound (`bingo`, `warning`, `caution`, `pullup`, `altitude`, `mastercaution`, or `off`), plus a **TEST** button.
+- Settings save to `config/fms-hud.properties`; **Done** closes the screen. Existing shortcuts remain available: H HUD, J boxed-layout editor, K HUD style, M audio toggle, N master-caution preview.
+
+### Replacing sounds with your own clips
+
+The menu selects from the six bundled sound event IDs; it does **not** import arbitrary MP3/OGG files or browse your file system yet. To substitute a clip, use a Minecraft resource pack that overrides the matching resource at `assets/fms/sounds/warnings/<name>.ogg` while preserving the existing filenames and event names. Convert to OGG Vorbis before adding the replacement. Reload resources after changing the pack.
+
+The first pass has **no Xaero terrain detection**, no actual ground-proximity or pull-up activation, and no autopilot. `pullup` and `altitude` can be previewed or assigned to an existing alert as a substitute tone, but are not separate detected events yet.
+
+Changes are pushed directly to `main`. They have not been compiled or in-game verified in this environment: run `gradle clean build` and `gradle runClient` locally.
