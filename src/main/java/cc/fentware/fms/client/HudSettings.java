@@ -30,7 +30,7 @@ public final class HudSettings {
     }
     public static boolean terrainWarnings = true;
     public static boolean warningTones = true;
-    public static String cautionTone = "mastercaution";
+    public static String cautionTone = "caution";
     public static String criticalTone = "warning";
     public static boolean audioEnabled = true;
     public static int audioVolume = 75;
