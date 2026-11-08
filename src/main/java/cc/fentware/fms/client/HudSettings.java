@@ -11,6 +11,10 @@ import java.util.Properties;
 public final class HudSettings {
     private static final Path PATH = FabricLoader.getInstance().getConfigDir().resolve("fms-hud.properties");
     public enum Style { BOXED, AVIATION, HYBRID }
+    public enum HudMode { ALWAYS, ELYTRA_EQUIPPED, ONLY_FLYING }
+    public static HudMode hudMode = HudMode.ELYTRA_EQUIPPED;
+    /** Individual alert assignments: bingo, sink rate, fast descent, wings, critical wings. */
+    public static String[] alertSound = {"bingo", "caution", "warning", "mastercaution", "warning"};
     public static Style style = Style.AVIATION;
     public static void cycleStyle() {
         Style[] styles = Style.values();
@@ -33,6 +37,12 @@ public final class HudSettings {
         try (InputStream in = Files.newInputStream(PATH)) {
             p.load(in);
             enabled = Boolean.parseBoolean(p.getProperty("enabled", "true"));
+            try { hudMode = HudMode.valueOf(p.getProperty("hudMode", "ELYTRA_EQUIPPED")); }
+            catch (IllegalArgumentException ignored) { hudMode = HudMode.ELYTRA_EQUIPPED; }
+            for (int i = 0; i < alertSound.length; i++) {
+                String stored = p.getProperty("alertSound." + i, alertSound[i]);
+                if (FmsSounds.validName(stored)) alertSound[i] = stored;
+            }
             audioEnabled = Boolean.parseBoolean(p.getProperty("audioEnabled", "true"));
             try { audioVolume = Math.max(0, Math.min(100, Integer.parseInt(p.getProperty("audioVolume", "75")))); }
             catch (NumberFormatException ignored) { audioVolume = 75; }
@@ -56,6 +66,8 @@ public final class HudSettings {
     public static void save() {
         Properties p = new Properties();
         p.setProperty("enabled", String.valueOf(enabled));
+        p.setProperty("hudMode", hudMode.name());
+        for (int i = 0; i < alertSound.length; i++) p.setProperty("alertSound." + i, alertSound[i]);
         p.setProperty("audioEnabled", String.valueOf(audioEnabled));
         p.setProperty("audioVolume", String.valueOf(audioVolume));
         p.setProperty("style", style.name());
