@@ -17,6 +17,8 @@ public final class HudSettings {
         style = styles[(style.ordinal() + 1) % styles.length];
         save();
     }
+    public static boolean audioEnabled = true;
+    public static int audioVolume = 75;
     public static boolean enabled = true;
     public static double instrumentsX = 0.02, instrumentsY = 0.12;
     public static double navigationX = 0.76, navigationY = 0.12;
@@ -31,6 +33,9 @@ public final class HudSettings {
         try (InputStream in = Files.newInputStream(PATH)) {
             p.load(in);
             enabled = Boolean.parseBoolean(p.getProperty("enabled", "true"));
+            audioEnabled = Boolean.parseBoolean(p.getProperty("audioEnabled", "true"));
+            try { audioVolume = Math.max(0, Math.min(100, Integer.parseInt(p.getProperty("audioVolume", "75")))); }
+            catch (NumberFormatException ignored) { audioVolume = 75; }
             try { style = Style.valueOf(p.getProperty("style", "AVIATION")); }
             catch (IllegalArgumentException ignored) { style = Style.AVIATION; }
             instrumentsX = fraction(p, "instrumentsX", 0.02);
@@ -51,6 +56,8 @@ public final class HudSettings {
     public static void save() {
         Properties p = new Properties();
         p.setProperty("enabled", String.valueOf(enabled));
+        p.setProperty("audioEnabled", String.valueOf(audioEnabled));
+        p.setProperty("audioVolume", String.valueOf(audioVolume));
         p.setProperty("style", style.name());
         p.setProperty("instrumentsX", String.valueOf(instrumentsX));
         p.setProperty("instrumentsY", String.valueOf(instrumentsY));
