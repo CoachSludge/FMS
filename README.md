@@ -214,3 +214,21 @@ Xaero's World Map and Xaero's Minimap share saved waypoint data. FMS can now **r
 The read-only importer searches the active game directory's `xaero/minimap/<world>/dim%.../*.txt` (or legacy `XaeroWaypoints`), ignores disabled waypoints, and never changes Xaero's saved files. It does not inject a menu into Xaero's map GUI. Map right-click **Fly Here**, live waypoint selection sync, waypoint markers drawn by FMS on Xaero, multi-stop routes, altitude-aware cruise planning and automatic dimension/world matching are **not implemented yet**. **Verify that the listed waypoint's world and dimension are the current ones before selecting**, because the importer can list entries from old saves/servers and FMS uses X/Z coordinates only. This prevents implying the navigation is dimension-aware before that is implemented. Map changes must be saved before FMS can see them.
 
 FMS needs no Xaero mod to launch; Xaero integration commands simply return an empty list without Xaero waypoint data. The importer is based on publicly documented Xaero waypoint on-disk formats and has not been compiled or playtested here.
+
+## Phase 2 cruise flight director and estimated rocket budgeting
+
+Once you set a destination with `/fms go X Z` or `/fms xaero select N`, FMS now estimates a cruise altitude and rocket budget and shows heading correction / climb advice on the aviation HUD. The boxed navigation panel shows CRZ Y, CLIMB/LEVEL/DESCEND, estimated rocket requirement and whether terrain coverage is incomplete.
+
+**Rocket math (estimate only):** `travelRockets = ceil(remaining horizontal distance / configured blocksPerRocket)`; `totalRockets = travelRockets + reserve`. Default assumed range is **400 blocks per rocket**, with **2 reserve rockets**. This is a *tunable heuristic*, not a measurement of actual Minecraft flight range: speed, rocket duration, pitch, glide, windless Minecraft physics, and boosts will affect real use. Do not use the number as a guarantee that the player has enough fuel.
+
+**Cruise altitude:** sample the loaded Minecraft heightmap along the first up to 768 blocks of the straight-line route (max 48 sample points), add a **40-block clearance margin** to the highest observed surface; when any segment is unloaded or the destination is farther away, also apply the fallback target **Y 250**, and label the route **UNKNOWN**. Clamp recommended Y to 64..300 as a provisional overworld-oriented flight-director range. This is never a safe-altitude certification: sparse samples can miss obstacles, and tall terrain can exceed the ceiling. The recommendation is updated from loaded terrain as you fly. Cruise Y can be manually overridden.
+
+**Advisory commands** (no automatic movement, rockets, turning, or pitch control):
+- `/fms cruise on` / `/fms cruise off` — show/hide the cruise flight director.
+- `/fms cruise auto` — use the local terrain-based suggested altitude.
+- `/fms cruise y 180` — manually target Y 180.
+- `/fms cruise reach 400` — set assumed horizontal reach in blocks per firework (100–2000).
+- `/fms cruise reserve 2` — reserve 2 rockets (0–16).
+- `/fms cruise status` — print destination heading, turning correction, Y target and approximate fuel budget.
+
+Headings use Minecraft's actual yaw convention. The flight director does not activate until a destination is selected and can be disabled without disabling the ordinary FMS warnings. The implementation is committed to main but has not been locally compiled or in-game tested here.
