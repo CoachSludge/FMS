@@ -18,7 +18,7 @@ public final class FmsSettingsScreen extends Screen {
     private static final int WIDTH = 300;
     private static final int HEIGHT = 208;
     private static final String[] LABELS = {
-        "BINGO FUEL", "SINK RATE", "HIGH SPEED DESCENT"
+        "BINGO FUEL", "SINK RATE", "HIGH SPEED DESCENT", "HARD TURN", "STEEP DIVE"
     };
     private final Screen parent;
     private int page = 1; // Audio is the initial tab.
@@ -76,18 +76,16 @@ public final class FmsSettingsScreen extends Screen {
         drawButton(g, x + 126, y + 47, 45, "VOL -");
         drawButton(g, x + 177, y + 47, 59, HudSettings.audioVolume + "%");
         drawButton(g, x + 242, y + 47, 50, "VOL +");
-        g.text(font, "WARNING TYPE", x + 9, y + 72, MUTED, false);
-        g.text(font, "ASSIGNED SOUND", x + 125, y + 72, MUTED, false);
+        drawButton(g, x + 8, y + 66, 110, "MANEUVERS: " + (HudSettings.maneuverWarnings ? "ON" : "OFF"));
+        g.text(font, "ASSIGNED SOUND", x + 125, y + 70, MUTED, false);
 
 
         for (int i = 0; i < LABELS.length; i++) {
             int rowY = y + 84 + i * 19;
             g.text(font, LABELS[i], x + 9, rowY + 5, WHITE, false);
-            drawButton(g, x + 122, rowY, 112, HudSettings.alertSound[i]);
+            drawButton(g, x + 122, rowY, 112, HudSettings.alertSound[i < 3 ? i : i + 11]);
             drawButton(g, x + 240, rowY, 52, "TEST");
         }
-        g.text(font, "One alert at a time - no tone/voice overlay.", x + 9, y + 150, MUTED, false);
-        g.text(font, "Beep clips can be assigned to any alert.", x + 9, y + 164, MUTED, false);
     }
 
     private void renderTerrainPage(GuiGraphicsExtractor g, int x, int y) {
@@ -165,7 +163,9 @@ public final class FmsSettingsScreen extends Screen {
                 HudSettings.minimapCorner = corners[(HudSettings.minimapCorner.ordinal() + 1) % corners.length];
             } else return super.mouseClicked(event, doubleClick);
         } else if (page == 1) {
-            if (hit(mx, my, x + 8, y + 47, 110)) {
+            if (hit(mx, my, x + 8, y + 66, 110)) {
+                HudSettings.maneuverWarnings = !HudSettings.maneuverWarnings;
+            } else if (hit(mx, my, x + 8, y + 47, 110)) {
                 HudSettings.audioEnabled = !HudSettings.audioEnabled;
             } else if (hit(mx, my, x + 126, y + 47, 45)) {
                 HudSettings.audioVolume = Math.max(0, HudSettings.audioVolume - 10);
@@ -175,12 +175,13 @@ public final class FmsSettingsScreen extends Screen {
                 for (int i = 0; i < LABELS.length; i++) {
                     int rowY = y + 84 + i * 19;
                     if (hit(mx, my, x + 122, rowY, 112)) {
-                        HudSettings.alertSound[i] = FmsSounds.nextName(HudSettings.alertSound[i]);
+                        int soundIndex = i < 3 ? i : i + 11;
+                        HudSettings.alertSound[soundIndex] = FmsSounds.nextName(HudSettings.alertSound[soundIndex]);
                         HudSettings.save();
                         return true;
                     }
                     if (hit(mx, my, x + 240, rowY, 52)) {
-                        FmsSounds.previewName(HudSettings.alertSound[i]);
+                        FmsSounds.previewName(HudSettings.alertSound[i < 3 ? i : i + 11]);
                         return true;
                     }
                 }
