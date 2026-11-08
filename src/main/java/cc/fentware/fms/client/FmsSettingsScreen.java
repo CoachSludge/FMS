@@ -88,14 +88,14 @@ public final class FmsSettingsScreen extends Screen {
     private void renderTerrainPage(GuiGraphicsExtractor g, int x, int y) {
         drawButton(g, x + 8, y + 47, 284,
                 "TERRAIN WARNINGS: " + (HudSettings.terrainWarnings ? "ON" : "OFF"));
-        String[] terrainLabels = {"LOW TERRAIN", "TERRAIN AHEAD", "TERRAIN", "PULL UP"};
+        String[] terrainLabels = {"LOW TERRAIN", "TERRAIN AHEAD", "TERRAIN", "PULL UP", "ALTITUDE"};
         for (int i = 0; i < terrainLabels.length; i++) {
-            int rowY = y + 76 + i * 23;
+            int rowY = y + 74 + i * 19;
             g.text(font, terrainLabels[i], x + 9, rowY + 5, WHITE, false);
             drawButton(g, x + 122, rowY, 112, HudSettings.alertSound[5 + i]);
             drawButton(g, x + 240, rowY, 52, "TEST");
         }
-        g.text(font, "Loaded terrain only - unknown ground is not scanned.", x + 9, y + 170, MUTED, false);
+        g.text(font, "Loaded chunks only - terrain beyond view is unknown.", x + 9, y + 173, MUTED, false);
     }
 
     private void drawButton(GuiGraphicsExtractor g, int x, int y, int w, String label) {
@@ -171,7 +171,7 @@ public final class FmsSettingsScreen extends Screen {
             if (hit(mx, my, x + 8, y + 47, 284)) {
                 HudSettings.terrainWarnings = !HudSettings.terrainWarnings;
             } else {
-                for (int i = 0; i < 4; i++) {
+                for (int i = 0; i < 5; i++) {
                     int rowY = y + 76 + i * 23;
                     if (hit(mx, my, x + 122, rowY, 112)) {
                         HudSettings.alertSound[5 + i] = FmsSounds.nextName(HudSettings.alertSound[5 + i]);
