@@ -21,6 +21,7 @@ public final class FmsClient implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
         HudSettings.load();
+        FmsSounds.initialize();
         FmsCommands.register();
         KeyMapping.Category category = KeyMapping.Category.register(Identifier.fromNamespaceAndPath("fms", "flight"));
         KeyMapping toggle = KeyMappingHelper.registerKeyMapping(new KeyMapping(
@@ -31,7 +32,20 @@ public final class FmsClient implements ClientModInitializer {
         KeyMapping style = KeyMappingHelper.registerKeyMapping(new KeyMapping(
                 "key.fms.style", InputConstants.Type.KEYBOARD, InputConstants.KEY_K, category));
 
+        KeyMapping mute = KeyMappingHelper.registerKeyMapping(new KeyMapping(
+                "key.fms.mute", InputConstants.Type.KEYBOARD, InputConstants.KEY_M, category));
+        KeyMapping preview = KeyMappingHelper.registerKeyMapping(new KeyMapping(
+                "key.fms.preview", InputConstants.Type.KEYBOARD, InputConstants.KEY_N, category));
+
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
+            while (mute.consumeClick()) {
+                HudSettings.audioEnabled = !HudSettings.audioEnabled;
+                HudSettings.save();
+                if (client.player != null) client.player.sendSystemMessage(net.minecraft.network.chat.Component.literal(
+                    "[FMS] Warning sounds " + (HudSettings.audioEnabled ? "enabled" : "muted")));
+            }
+            while (preview.consumeClick()) FmsSounds.preview(FmsSounds.MASTER_CAUTION);
+            WarningAudioController.tick(client);
             while (style.consumeClick()) HudSettings.cycleStyle();
             while (toggle.consumeClick()) { HudSettings.enabled = !HudSettings.enabled; HudSettings.save(); }
             while (edit.consumeClick()) {
